@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 class OccupancyGridSensor(Sensor):
     def __init__(self):
         Sensor.__init__(self)
-        self.x_width = 5
-        self.y_width = 5
+        self.x_width = 6
+        self.y_width = 6
         self.grid_cell_size = 0.01 # currently ignored
 
         self.name = 'local_grid'
@@ -59,11 +59,11 @@ class OccupancyGridSensor(Sensor):
         # Fill the correct OG map indices with the section of the map that has been selected
         og_map[og_i_low:og_i_high, og_j_low:og_j_high] = top_down_map.map[map_i_low:map_i_high, map_j_low:map_j_high]
         resized_og_map = self.resize(og_map)
+
         return resized_og_map
-
         """
-        # Get position of ego agent
 
+        # Get position of ego agent
         ego_agent = agents[agent_index]
         ego_agent_pos = ego_agent.pos_global_frame
 
@@ -77,12 +77,8 @@ class OccupancyGridSensor(Sensor):
         start_idx_x, start_idx_y, end_idx_x, end_idx_y = top_down_map.getSubmapByIndices(ego_agent_pos_idx[0],
                                                                                      ego_agent_pos_idx[1], span_x, span_y)
 
-        # Obtain static map including all obstacles
-        # static_map = self.map.get_occupancy_grid(self.obstacle) # Old version
-        static_map = top_down_map.static_map.astype(float)
-
         # Get the batch_grid with filled in values
-        batch_grid = static_map[start_idx_x:end_idx_x, start_idx_y:end_idx_y]
+        batch_grid = top_down_map.map[start_idx_x:end_idx_x, start_idx_y:end_idx_y]
 
         return batch_grid
 
