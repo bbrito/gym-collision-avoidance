@@ -157,8 +157,6 @@ class CollisionAvoidanceEnv(gym.Env):
         # Take observation
         next_observations = self._get_obs()
 
-        # Get batch grid
-        #batch_grid = self._get_grid()
 
         """"""
         if (Config.EVALUATE_MODE and Config.ANIMATE_EPISODES and self.episode_step_number % self.animation_period_steps == 0):
@@ -190,9 +188,6 @@ class CollisionAvoidanceEnv(gym.Env):
         which_agents_done_dict = {}
         for i, agent in enumerate(self.agents):
             which_agents_done_dict[agent.id] = which_agents_done[i]
-
-        # Add batch_grid to infos dictionary, since it did not work with observations.
-        which_agents_done_dict['batch_grid'] = batch_grid
 
         return next_observations, rewards, game_over, \
             {'which_agents_done': which_agents_done_dict}
