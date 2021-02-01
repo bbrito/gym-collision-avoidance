@@ -2241,11 +2241,10 @@ def agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,other_age
     obstacle = []
     #Square
     obstacle_1 = [(2,2), (0,2), (0,0), (2,0)]
-    obstacle_2 = [(-1,-1), (-2,-1), (-2,-2),(-1,-2)]
 
     #Triangle
     #obstacle_1 = [(0, 2), (-3, -2), (3, -2)]
-    obstacle.append(obstacle_2)
+    obstacle.append(obstacle_1)
 
     distance = np.random.uniform(6.0, 8.0)
     angle = np.random.uniform(-np.pi, np.pi)
@@ -2256,7 +2255,7 @@ def agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,other_age
 
     agents.append(Agent(x0_agent_1, y0_agent_1, goal_x_1, goal_y_1, radius, pref_speed, None, ego_agent_policy,
                         ego_agent_dynamics,
-                        [OtherAgentsStatesSensor,OccupancyGridSensor], 0))
+                        [OtherAgentsStatesSensor,AngularMapSensor], 0))
     agents.append(Agent(goal_x_1, goal_y_1, x0_agent_1, y0_agent_1, radius, pref_speed, None, other_agents_policy,
                         other_agents_dynamics,
                         [OtherAgentsStatesSensor], 1))
@@ -2336,13 +2335,13 @@ def test_agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,othe
             agents.append(Agent(positions_list[ag_id - 1][0], positions_list[ag_id - 1][1],
                                 positions_list[ag_id][0], positions_list[ag_id][1], radius, pref_speed,
                                 None, ego_agent_policy, ego_agent_dynamics,
-                                [OtherAgentsStatesSensor, AngularMapSensor], ag_id))
+                                [OtherAgentsStatesSensor, LaserScanSensor], ag_id))
 
         else:
             agents.append(Agent(positions_list[ag_id-1][0], positions_list[ag_id - 1][1],
                                 positions_list[ag_id][0], positions_list[ag_id][1], radius, pref_speed,
                                 None, other_agents_policy, other_agents_dynamics,
-                                [OtherAgentsStatesSensor], ag_id)) #TODO: ask Bruno why this is 2*ag_id?? This errors in the MPC function
+                                [OtherAgentsStatesSensor], ag_id))
 
     if "Static" in str(agents[0].policy):
         #agents[0].sensors[1].static_obstacles_manager.obstacle = obstacle
@@ -2350,7 +2349,7 @@ def test_agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,othe
 
     return agents, obstacle
 
-def train_stage_1(number_of_agents=4, ego_agent_policy=MPCPolicy,other_agents_policy=[RVOPolicy], ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None):
+def train_stage_2(number_of_agents=4, ego_agent_policy=MPCPolicy,other_agents_policy=[RVOPolicy], ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None):
     '''
     This is stage 1 of the training scenario.
     Square/wall shaped obstacles: [0,4]
@@ -2455,7 +2454,7 @@ def train_stage_1(number_of_agents=4, ego_agent_policy=MPCPolicy,other_agents_po
 
     return agents, obstacle
 
-def train_stage_2(number_of_agents=10, ego_agent_policy=MPCPolicy,other_agents_policy=[RVOPolicy], ego_agent_dynamics=FirstOrderDynamics, other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None):
+def train_stage_3(number_of_agents=10, ego_agent_policy=MPCPolicy,other_agents_policy=[RVOPolicy], ego_agent_dynamics=FirstOrderDynamics, other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None):
     '''
     This is stage 2 of the training scenario.
     Square/wall shaped obstacles: [2,15]
@@ -2894,7 +2893,7 @@ def agent_with_crossing(number_of_agents=1, ego_agent_policy=MPCPolicy, other_ag
             agents.append(Agent(positions_list_1[2*ag_id+1][0], positions_list_1[2*ag_id+1][1],
                               positions_list_1[2*ag_id][0], positions_list_1[2*ag_id][1], radius, pref_speed,
                               None, ego_agent_policy, ego_agent_dynamics,
-                              [OtherAgentsStatesSensor,OccupancyGridSensor], ag_id))
+                              [OtherAgentsStatesSensor,LaserScanSensor], ag_id))
         else:
             agents.append(Agent(positions_list_1[2*ag_id+1][0], positions_list_1[2*ag_id+1][1],
                               positions_list_1[2*ag_id][0], positions_list_1[2*ag_id][1], radius, pref_speed,

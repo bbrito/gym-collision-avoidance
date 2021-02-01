@@ -333,7 +333,7 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, ax2, last_index=-1):
                             '%.1f' % agent.global_state_history[ind, 0], color=c)
                 """
                 if "Static" in str(type(agent.policy)):
-                    obstacles = np.array(agent.sensors[1].static_obstacles_manager.obstacle)
+                    obstacles = np.array(agent.policy.static_obstacles_manager.obstacle)
                     for obs in obstacles:
                         ax.add_patch(plt.Polygon(obs, ec=plt_colors[-1],fill=False))
 
@@ -419,7 +419,7 @@ def plot_Angular_map_vector(ax2, Angular_Map, ag, max_range=6):
     number_elements = Angular_Map.shape[0]
     cmap = plt.get_cmap('gnuplot')
 
-    min_angle = ag.heading_global_frame -np.pi
+    min_angle = ag.heading_global_frame - np.pi
 
     for ii in range(number_elements):
         angle_start = (min_angle + ii * (2*np.pi/Config.NUM_OF_SLICES)) * 180 / np.pi

@@ -45,7 +45,7 @@ class LaserScanSensor(Sensor):
 
         ranges = self.max_range*np.ones_like(self.angles)
         ranges[first_hits[0]] = self.ranges[first_hits[1]]
-
+        check = 1-ranges/Config.MAX_RANGE
         if self.debug:
             in_map_inds = np.where(in_maps)
             iis_in_map = iis[in_map_inds]

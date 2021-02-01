@@ -21,7 +21,7 @@ class AngularMapSensor(Sensor):
         self.angle_max = np.pi
         self.angle_min = -np.pi
         self.name = 'angular_map'
-        self.plot = False
+        self.plot = True
         self.static_obstacles_manager = StaticObstacleManager()
 
         # Either calculation from laserscan data or occupancy grid data can be chosen. Both give the same results

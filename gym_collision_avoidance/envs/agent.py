@@ -197,7 +197,7 @@ class Agent(object):
         global_state, ego_state = self.to_vector()
         self.global_state_history[self.step_num, :] = global_state
         self.ego_state_history[self.step_num, :] = ego_state
-        self.sensor_data_history.append(self.sensor_data[''])
+        #self.sensor_data_history.append(self.sensor_data[''])
 
     def print_agent_info(self):
         print('----------')
