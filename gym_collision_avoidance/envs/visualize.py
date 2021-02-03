@@ -338,9 +338,8 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, ax2, last_index=-1):
                         ax.add_patch(plt.Polygon(obs, ec=plt_colors[-1],fill=False))
 
                     # Plot angular map
-                    angular_map = (1-agent.sensor_data['laserscan'])*Config.MAX_RANGE
-                    occupancy_grid = agent.policy.static_obstacles_manager.occupancy_grid
-                    if angular_map is not None:
+                    if 'laserscan' in agent.sensor_data:
+                        angular_map = (1 - agent.sensor_data['laserscan']) * Config.MAX_RANGE
                         ax2.clear()
                         plot_Angular_map_vector(ax2, angular_map,agent, max_range=6.0)
                         ax2.plot(30, 30, color='r', marker='o', markersize=4)
@@ -350,7 +349,8 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, ax2, last_index=-1):
                         ax2.arrow(0, 0, aanliggend, overstaand, head_width=0.5,head_length=0.5)  # agent poiting direction
                         ax2.set_xlim([-6 - 1, 6 + 1])
                         ax2.set_ylim([-6 - 1, 6 + 1])
-                    if occupancy_grid is not None:
+                    if 'local_grid' in agent.sensor_data:
+                        occupancy_grid = agent.sensor_data['local_grid']
                         ax2.clear()
                         ax2.imshow(occupancy_grid, extent=[-10,10,-10,10])
                         ax2.scatter(0, 0, s=100, c='red', marker='o')

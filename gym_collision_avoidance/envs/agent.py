@@ -45,7 +45,7 @@ class Agent(object):
         self.past_actions = np.zeros((self.num_actions_to_store,
                                       self.action_dim))
         self.next_state = []
-
+        self.sensor_data_history = []
         # Other parameters
         self.radius = radius
         self.pref_speed = pref_speed
@@ -104,8 +104,6 @@ class Agent(object):
 
         self.is_done = False
         self.warm_start = False
-
-        self._update_state_history()
 
     def __deepcopy__(self, memo):
         # Copy every attribute about the agent except its policy
@@ -197,7 +195,8 @@ class Agent(object):
         global_state, ego_state = self.to_vector()
         self.global_state_history[self.step_num, :] = global_state
         self.ego_state_history[self.step_num, :] = ego_state
-        #self.sensor_data_history.append(self.sensor_data[''])
+        if ('local_grid' in self.sensor_data) :
+            self.sensor_data_history.append(self.sensor_data['local_grid'])
 
     def print_agent_info(self):
         print('----------')

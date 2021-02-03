@@ -135,6 +135,9 @@ class CollisionAvoidanceEnv(gym.Env):
         self.episode_number = 0
         self.total_number_of_steps = 0
 
+        self.n_collisions = np.zeros([100])
+        self.n_timeouts = np.zeros([100])
+
         self.plot_save_dir = None
         self.plot_policy_name = None
 
@@ -210,8 +213,14 @@ class CollisionAvoidanceEnv(gym.Env):
         # Check which agents' games are finished (at goal/collided/out of time)
         which_agents_done, game_over = self._check_which_agents_done()
 
-        if game_over and self.prediction_model :
+        if game_over and (str(self.prediction_model)!='CVModel') :
+            self.n_collisions = np.roll(self.n_collisions,1)
+            self.n_collisions[0] = self.agents[0].in_collision
+            self.n_timeouts = np.roll(self.n_timeouts,1)
+            self.n_timeouts[0] = self.agents[0].ran_out_of_time
             self.prediction_model.data_handler.addEpisodeData(self.agents)
+            if (self.episode_number >= 100) and (self.episode_number%100==0):
+                self.prediction_model.train_step(self.episode_number,np.mean(self.n_collisions),np.mean(self.n_timeouts))
 
         which_agents_done_dict = {}
         for i, agent in enumerate(self.agents):
@@ -324,7 +333,9 @@ class CollisionAvoidanceEnv(gym.Env):
                                ", ego_agent_dynamics=" + self.ego_agent_dynamics +", other_agents_dynamics=" + self.other_agents_dynamics
                                                    + ")")
         else:
+            '''
             if self.total_number_of_steps < 1e6:
+                scenario_index = 5
                 self.number_of_agents = 2
             elif self.total_number_of_steps < 2e6:
                 self.number_of_agents = 4
@@ -335,7 +346,29 @@ class CollisionAvoidanceEnv(gym.Env):
             elif self.total_number_of_steps < 7e6:
                 self.number_of_agents = 10
 
-            scenario_index = np.random.randint(0,len(self.scenario))
+            '''
+            if self.total_number_of_steps < 100000:
+                # Supervised learning step
+                scenario_index = 0
+                self.number_of_agents = 4 # Maximum no. of agents
+            # RL steps:
+            elif self.total_number_of_steps < 1e6:
+                scenario_index = 0
+                self.number_of_agents = 4
+            elif self.total_number_of_steps < 3e6:
+                scenario_index = 1
+                self.number_of_agents = 4
+            elif self.total_number_of_steps < 5e6:
+                scenario_index = 2 
+                self.number_of_agents = 6
+            elif self.total_number_of_steps < 7e6:
+                scenario_index = np.random.randint(2,len(self.scenario))
+                self.number_of_agents = 6
+            elif self.total_number_of_steps >= 7e6:
+                scenario_index = np.random.randint(2,len(self.scenario))
+                self.number_of_agents = 8
+
+            #scenario_index = np.random.randint(0,len(self.scenario))
             self.agents, self.obstacles = eval("tc."+self.scenario[scenario_index]+"(number_of_agents="+str(self.number_of_agents)+", ego_agent_policy=" + self.ego_policy +
                                ", ego_agent_dynamics=" + self.ego_agent_dynamics +", other_agents_dynamics=" + self.other_agents_dynamics +", other_agents_policy=" + self.other_agents_policy+ ")")
 

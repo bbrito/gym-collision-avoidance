@@ -95,9 +95,6 @@ class OccupancyGridSensor(Sensor):
             self.plot_top_down_map(float_map, ego_agent_pos_idx, start_idx_x, start_idx_y, ego_agent_heading, title='Rotated')
             self.plot_batch_grid(batch_grid)
 
-        # For visualization
-        agents[0].policy.static_obstacles_manager.occupancy_grid = batch_grid
-
         return batch_grid
 
     # Plot
