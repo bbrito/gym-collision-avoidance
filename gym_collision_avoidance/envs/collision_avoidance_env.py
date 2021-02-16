@@ -83,7 +83,7 @@ class CollisionAvoidanceEnv(gym.Env):
         #self.ego_agent_dynamics = "FirstOrderDynamics"
 
         self.other_agents_policy = "RVOPolicy"
-        self.other_agents_dynamics = "UnicycleDynamics"
+        self.other_agents_dynamics = "UnicycleDynamics"#"UnicycleDynamics"
 
         self.max_heading_change = 4
         self.min_heading_change = -4
@@ -219,7 +219,7 @@ class CollisionAvoidanceEnv(gym.Env):
             self.n_timeouts = np.roll(self.n_timeouts,1)
             self.n_timeouts[0] = self.agents[0].ran_out_of_time
             self.prediction_model.data_handler.addEpisodeData(self.agents)
-            if (self.episode_number >= 100) and (self.episode_number%100==0):
+            if (self.episode_number >= 100) and (self.episode_number%10==0):
                 self.prediction_model.train_step(self.episode_number,np.mean(self.n_collisions),np.mean(self.n_timeouts))
 
         which_agents_done_dict = {}
@@ -391,7 +391,8 @@ class CollisionAvoidanceEnv(gym.Env):
                     ag.policy = self.policies[i]
                     i += 1
 
-        self.agents[0].policy.enable_collision_avoidance = Config.ENABLE_COLLISION_AVOIDANCE
+        if self.prediction_model:
+            self.prediction_model.reset_states(len(self.agents))
 
         for agent in self.agents:
             agent.max_heading_change = self.max_heading_change
