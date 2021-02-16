@@ -332,11 +332,11 @@ class CollisionAvoidanceEnv(gym.Env):
             if self.total_number_of_steps < 300000:
                 # Supervised learning step
                 scenario_index = 0
-                self.number_of_agents = 4 # Maximum no. of agents
+                self.number_of_agents = 2 # Maximum no. of agents
             # RL steps:
             elif self.total_number_of_steps < 1e6:
                 scenario_index = 0
-                self.number_of_agents = 4
+                self.number_of_agents = 2
             elif self.total_number_of_steps < 3e6:
                 scenario_index = 1
                 self.number_of_agents = 4

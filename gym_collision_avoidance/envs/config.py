@@ -25,13 +25,13 @@ class Config:
     #########################################################################
     # COLLISION AVOIDANCE PARAMETER
     NUM_TEST_CASES = 50
-    PLOT_EVERY_N_EPISODES = 50# for tensorboard visualization
+    PLOT_EVERY_N_EPISODES = 100# for tensorboard visualization
     DT             = 0.1 # seconds between simulation time steps
     REWARD_AT_GOAL = 3.0 # reward given when agent reaches goal position
     REWARD_COLLISION_WITH_AGENT = -10.0 # reward given when agent collides with another agent
     REWARD_TIMEOUT = -10.0 # reward given for not reaching the goal
     REWARD_INFEASIBLE = 0.0
-    REWARD_COLLISION_WITH_WALL = -0.25 # reward given when agent collides with wall
+    REWARD_COLLISION_WITH_WALL = -10 # reward given when agent collides with wall
     REWARD_GETTING_CLOSE   = 0.0 # reward when agent gets close to another agent (unused?)
     REWARD_ENTERED_NORM_ZONE   = 0.0 # reward when agent enters another agent's social zone
     REWARD_TIME_STEP   = -0.01 # default reward given if none of the others apply (encourage speed)
@@ -84,7 +84,7 @@ class Config:
     MAP_WIDTH = 50 # Meters
     MAP_HEIGHT = 50 # Meters
 
-    SCENARIOS_FOR_TRAINING = ["test_agent_with_obstacle", "train_stage_1", "train_stage_2", "agent_with_corridor", "agent_with_door", "agent_with_crossing", "agent_with_hallway"]#["train_agents_swap_circle","train_agents_random_positions","train_agents_pairwise_swap"]
+    SCENARIOS_FOR_TRAINING = ["test_agent_with_obstacle", "train_stage_1", "train_stage_2"] # "agent_with_corridor", "agent_with_door", "agent_with_crossing", "agent_with_hallway"]#["train_agents_swap_circle","train_agents_random_positions","train_agents_pairwise_swap"]
 
     # Angular Map
     NUM_OF_SLICES = 16

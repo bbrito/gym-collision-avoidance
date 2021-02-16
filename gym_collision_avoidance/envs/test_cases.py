@@ -2256,7 +2256,7 @@ def agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,other_age
 
     agents.append(Agent(x0_agent_1, y0_agent_1, goal_x_1, goal_y_1, radius, pref_speed, None, ego_agent_policy,
                         ego_agent_dynamics,
-                        [OtherAgentsStatesSensor,LaserScanSensor], 0))
+                        [OtherAgentsStatesSensor,OccupancyGridSensor], 0))
     agents.append(Agent(goal_x_1, goal_y_1, x0_agent_1, y0_agent_1, radius, pref_speed, None, other_agents_policy,
                         other_agents_dynamics,
                         [OtherAgentsStatesSensor], 1))
@@ -2283,7 +2283,7 @@ def test_agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,othe
     obstacle = []
 
     # Size of square
-    size_square = np.random.uniform(1, 4)
+    size_square = np.random.uniform(1, 3)
     # Upper x,y value square
     x_v_up = np.random.uniform(-3,3)
     y_v_up = np.random.uniform(-3,3)
@@ -2295,7 +2295,7 @@ def test_agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,othe
 
     in_collision = False
     while not in_collision:
-        distance = np.random.uniform(6.0, 8.0)
+        distance = np.random.uniform(2.0, 5.0)
         angle = np.random.uniform(-np.pi, np.pi)
         x0_agent_1 = distance * np.cos(angle)
         y0_agent_1 = distance * np.sin(angle)
@@ -2315,7 +2315,7 @@ def test_agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,othe
     for ag_id in range(n_agents):
         in_collision = False
         while not in_collision:
-            distance = np.random.uniform(6.0, 8.0)
+            distance = np.random.uniform(2.0, 5.0)
             angle = np.random.uniform(-np.pi, np.pi)
             x0_agent_1 = distance * np.cos(angle)
             y0_agent_1 = distance * np.sin(angle)
