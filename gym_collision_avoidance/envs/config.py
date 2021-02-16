@@ -57,12 +57,12 @@ class Config:
     NUM_PAST_ACTIONS_IN_STATE = 0
 
     NEAR_GOAL_THRESHOLD = 0.75
-    MAX_TIME_RATIO = 4.0 # agent has this number times the straight-line-time to reach its goal before "timing out"
+    MAX_TIME_RATIO = 3.0 # agent has this number times the straight-line-time to reach its goal before "timing out"
 
     SENSING_HORIZON  = np.inf
     # SENSING_HORIZON  = 3.0
 
-    RVO_TIME_HORIZON = 3.0
+    RVO_TIME_HORIZON = 4.0
     RVO_COLLAB_COEFF = 0.5
     RVO_ANTI_COLLAB_T = 1.0
 
@@ -81,8 +81,8 @@ class Config:
     SUBMAP_RESOLUTION = 0.1 # Pixel / meter
 
     # STATIC MAP
-    MAP_WIDTH = 30 # Meters
-    MAP_HEIGHT = 30 # Meters
+    MAP_WIDTH = 50 # Meters
+    MAP_HEIGHT = 50 # Meters
 
     SCENARIOS_FOR_TRAINING = ["test_agent_with_obstacle", "train_stage_1", "train_stage_2", "agent_with_corridor", "agent_with_door", "agent_with_crossing", "agent_with_hallway"]#["train_agents_swap_circle","train_agents_random_positions","train_agents_pairwise_swap"]
 

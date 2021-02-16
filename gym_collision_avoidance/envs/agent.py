@@ -1,6 +1,7 @@
 import numpy as np
 from gym_collision_avoidance.envs.config import Config
 from gym_collision_avoidance.envs.util import wrap, find_nearest
+from gym_collision_avoidance.envs.utils import end_conditions as ec
 import operator
 import math
 
@@ -52,6 +53,8 @@ class Agent(object):
         self.id = id
         self.dist_to_goal = 0.0
         self.near_goal_threshold = Config.NEAR_GOAL_THRESHOLD
+
+        self.end_condition = ec._check_if_at_goal
 
         self.straight_line_time_to_reach_goal = (np.linalg.norm(self.pos_global_frame - self.goal_global_frame) - self.near_goal_threshold)/self.pref_speed
         if Config.EVALUATE_MODE or Config.PLAY_MODE:
@@ -115,8 +118,9 @@ class Agent(object):
         return obj
 
     def _check_if_at_goal(self):
-        is_near_goal = (self.pos_global_frame[0] - self.goal_global_frame[0])**2 + (self.pos_global_frame[1] - self.goal_global_frame[1])**2 <= self.near_goal_threshold**2
-        self.is_at_goal = is_near_goal
+        #is_near_goal = (self.pos_global_frame[0] - self.goal_global_frame[0])**2 + (self.pos_global_frame[1] - self.goal_global_frame[1])**2 <= self.near_goal_threshold**2
+        #self.is_at_goal = is_near_goal
+        self.end_condition(self)
 
     def set_state(self, px, py, vx=None, vy=None, heading=None):
         if vx is None or vy is None:
@@ -149,7 +153,7 @@ class Agent(object):
             self._update_state_history()
             if not self.is_at_goal:
                 self.t += dt
-            self.step_num += 1
+            #self.step_num += 1
             self.vel_global_frame = np.array([0.0, 0.0])
             self._store_past_velocities()
             return
