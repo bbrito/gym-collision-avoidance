@@ -7,7 +7,7 @@ import math
 
 class Agent(object):
     def __init__(self, start_x, start_y, goal_x, goal_y, radius,
-                 pref_speed, initial_heading, policy, dynamics_model, sensors, id, cooperation_coef = 0.5):
+                 pref_speed, initial_heading, policy, dynamics_model, sensors, id, cooperation_coef = 1.0):
 
         if policy =="GA3CCADRLPolicy":
             self.policy = "GA3CCADRLPolicy"
