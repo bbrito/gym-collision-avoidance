@@ -33,8 +33,8 @@ class AngularMapSensor(Sensor):
             self.num_beams = Config.LASERSCAN_LENGTH
             self.range_resolution = 0.1
             self.min_range = 0  # meters
-            self.min_angle = 0
-            self.max_angle = 2*np.pi
+            self.min_angle = -np.pi
+            self.max_angle = np.pi
 
             self.angles = np.linspace(self.min_angle, self.max_angle, self.num_beams)
             self.ranges = np.arange(self.min_range, self.max_range, self.range_resolution)
@@ -76,12 +76,14 @@ class AngularMapSensor(Sensor):
             self.static_obstacles_manager.angular_map = angular_map
 
         if self.plot:
-            self.plot_angular_grid(angular_map)
+            self.plot_angular_grid(((1 - ranges) * Config.MAX_RANGE), agents[0])
             if self.Laserscan:
                 ego_agent_pos = self.ego_agent.pos_global_frame
                 # Get map indices of ego agent
                 ego_agent_pos_idx, _ = top_down_map.world_coordinates_to_map_indices(ego_agent_pos)
-                self.plot_top_down_map(top_down_map, ego_agent_pos_idx)
+                self.plot_top_down_map(top_down_map, ego_agent_pos_idx, agents[0])
+
+
 
         return 1-angular_map/Config.MAX_RANGE
 
@@ -205,36 +207,40 @@ class AngularMapSensor(Sensor):
         return Angular_Map
 
     # Plot
-    def plot_angular_grid(self, Angular_Map):
+    def plot_angular_grid(self, Angular_Map, ag):
         fig = pl.figure("Angular grid")
         ax_ped_grid = pl.subplot()
         ax_ped_grid.clear()
-        self.plot_Angular_map_vector(ax_ped_grid, Angular_Map, max_range=6.0)
+        self.plot_Angular_map_vector(ax_ped_grid, Angular_Map,ag, max_range=6.0)
         ax_ped_grid.plot(30, 30, color='r', marker='o', markersize=4)
         ax_ped_grid.scatter(0, 0, s=100, c='red', marker='o')
-        #ax_ped_grid.arrow(0, 0, 1, 0, head_width=0.5,
-        #                 head_length=0.5)  # agent poiting direction
-        # x- and y-range only need to be [-1, 1] since the pedestrian grid is normalized
+        aanliggend = 1 * math.cos(ag.heading_global_frame)
+        overstaand = 1 * math.sin(ag.heading_global_frame)
+        ax_ped_grid.arrow(0, 0, aanliggend, overstaand, head_width=0.5, head_length=0.5)  # agent poiting direction
         ax_ped_grid.set_xlim([-self.max_range - 1, self.max_range + 1])
         ax_ped_grid.set_ylim([-self.max_range - 1, self.max_range + 1])
+        ax_ped_grid.set_axis_off()
         fig.canvas.draw()
 
         # sleep(0.5)  # Time in seconds.
         #pl.show(block=False)
         #sleep(0.5)  # Time in seconds.
 
-    def plot_Angular_map_vector(self, ax, Angular_Map, max_range=6):
+
+    def plot_Angular_map_vector(self, ax, Angular_Map,ag, max_range=6):
         number_elements = Angular_Map.shape[0]
         if self.Occupancygrid:
             #Angular_Map = Angular_Map[::-1]
             min_angle = self.orientation # reverse the entire array
+        else:
+            min_angle = ag.heading_global_frame - np.pi
         cmap = pl.get_cmap('gnuplot')
 
 
         for ii in range(number_elements):
             if self.Laserscan:
-                angle_start = ((self.phi[0]) + ii * self.radial_resolution) * 180 / np.pi
-                angle_end = ((self.phi[0]) + (ii + 1) * self.radial_resolution) * 180 / np.pi
+                angle_start = (min_angle + ii * (2 * np.pi / Config.NUM_OF_SLICES)) * 180 / np.pi
+                angle_end = (min_angle + (ii + 1) * (2 * np.pi / Config.NUM_OF_SLICES)) * 180 / np.pi
             if self.Occupancygrid:
                 angle_start = (min_angle + ii * self.radial_resolution) * 180 / np.pi
                 angle_end = (min_angle + (ii + 1) * self.radial_resolution) * 180 / np.pi
@@ -249,11 +255,17 @@ class AngularMapSensor(Sensor):
             ax.add_artist(distance_cone)
 
     # Plot
-    def plot_top_down_map(self, top_down_map, ego_agent_idx):
+    def plot_top_down_map(self, top_down_map, ego_agent_idx, ag):
         fig = plt.figure("Top down map")
+        draw_circle = plt.Circle((ego_agent_idx[1], ego_agent_idx[0]), 60, fill=False, edgecolor='red')
         ax = fig.subplots(1)
-        ax.imshow(top_down_map.map, aspect='equal')
+        ax.imshow(top_down_map.map, aspect='equal', cmap = 'Blues')
         ax.scatter(ego_agent_idx[1], ego_agent_idx[0], s=100, c='red', marker='o')
+        aanliggend = 20 * math.cos(ag.heading_global_frame)
+        overstaand = 20 * math.sin(ag.heading_global_frame)
+        ax.arrow(ego_agent_idx[1], ego_agent_idx[0], aanliggend, overstaand, head_width=5, head_length=5)  # agent poiting direction
+        ax.add_artist(draw_circle)
+        ax.set_axis_off()
         plt.show()
 
 
