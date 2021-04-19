@@ -33,8 +33,10 @@ from mpc_rl_collision_avoidance.policies.MPCPolicy import MPCPolicy
 from mpc_rl_collision_avoidance.policies.MultiAgentMPCPolicy import MultiAgentMPCPolicy
 from mpc_rl_collision_avoidance.policies.OtherAgentMPCPolicy import OtherAgentMPCPolicy
 from mpc_rl_collision_avoidance.policies.SocialMPCPolicy import SocialMPCPolicy
+from mpc_rl_collision_avoidance.policies.SimpleNNPolicy import SimpleNNPolicy
 from mpc_rl_collision_avoidance.policies.MPCRLPolicy import MPCRLPolicy
 from mpc_rl_collision_avoidance.policies.LearningMPCPolicy import LearningMPCPolicy
+from mpc_rl_collision_avoidance.policies.SafeGA3CPolicy import SafeGA3CPolicy
 #from mpc_rl_collision_avoidance.policies.ROSMPCPolicy import ROSMPCPolicy
 from gym_collision_avoidance.envs.dynamics.UnicycleDynamics import UnicycleDynamics
 from gym_collision_avoidance.envs.dynamics.FirstOrderDynamics import FirstOrderDynamics
@@ -3023,18 +3025,18 @@ def single_agent_in_a_corridor_with_obstacle(number_of_agents=5, ego_agent_polic
 
     # Corridor scenario
     obstacle = []
-    obstacle_1 = [(20,8), (-20, 8), (-20, 5), (20, 5)]
-    obstacle_2 = [(20, -5), (-20, -5), (-20, -8), (20, -8)]
-    obstacle.extend([obstacle_1, obstacle_2])
+    #obstacle_1 = [(20,8), (-20, 8), (-20, 5), (20, 5)]
+    #obstacle_2 = [(20, -5), (-20, -5), (-20, -8), (20, -8)]
+    #obstacle.extend([obstacle_1, obstacle_2])
 
     # Size of square
     size_square = np.random.uniform(2, 4)
     # Upper x,y value square
-    x_v_up = 2#np.random.uniform(-4,4)
-    y_v_up = 2#np.random.uniform(-4,4)
+    x_v_up = np.random.uniform(-2,2)
+    y_v_up = np.random.uniform(-2,2)
     # Lower x,y value of square
-    x_v_low = x_v_up - size_square
-    y_v_low = y_v_up - size_square
+    x_v_low = x_v_up - np.random.uniform(2, 4)
+    y_v_low = y_v_up - np.random.uniform(2, 4)
     obstacle_corners = [(x_v_up, y_v_up), (x_v_low, y_v_up), (x_v_low, y_v_low), (x_v_up, y_v_low)]
     obstacle.append(obstacle_corners)
 
@@ -3042,24 +3044,30 @@ def single_agent_in_a_corridor_with_obstacle(number_of_agents=5, ego_agent_polic
     goal_positions_list = []
 
     sign = random.choice((-1,1))
-    x0_agent_1 = sign*np.random.uniform(7.0, 12.0)
-    y0_agent_1 = np.random.uniform(-4, 4)
+    x0_agent_1 = random.choice((-1,1))*np.random.uniform(-6.0, 6.0)
+    y0_agent_1 = random.choice((-1,1))*np.random.uniform(-6, 6)
     goal_x_1 = -x0_agent_1
-    goal_y_1 = y0_agent_1
+    goal_y_1 = -y0_agent_1
     ini_positions_list.append(np.array([x0_agent_1, y0_agent_1]))
     goal_positions_list.append(np.array([goal_x_1, goal_y_1]))
 
     agents.append(Agent(ini_positions_list[0][0], ini_positions_list[0][1],
                        goal_positions_list[0][0], goal_positions_list[0][1], radius, pref_speed,
                        None, ego_agent_policy, ego_agent_dynamics,
-                       [OtherAgentsStatesSensor, OccupancyGridSensor], 0))
+                       [OtherAgentsStatesSensor], 0))
 
-
+    # Addin other RVO Agent
+    agents.append(Agent(goal_positions_list[0][0], goal_positions_list[0][1],
+                       ini_positions_list[0][0], ini_positions_list[0][1], radius, pref_speed,
+                       None, other_agents_policy, ego_agent_dynamics,
+                       [OtherAgentsStatesSensor], 0))
 
     agents[0].end_condition = ec._corridor_check_if_at_goal
 
-    agents[0].policy.static_obstacles_manager.obstacle = obstacle
-
+    try:
+        agents[0].policy.static_obstacles_manager.obstacle = obstacle
+    except:
+        "Obstacle Manager is missing"
 
     return agents, obstacle
 

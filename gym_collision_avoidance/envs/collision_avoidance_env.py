@@ -35,7 +35,13 @@ from mpc_rl_collision_avoidance.policies.MultiAgentMPCPolicy import MultiAgentMP
 from mpc_rl_collision_avoidance.policies.MPCStaticObsPolicy import MPCStaticObsPolicy
 from mpc_rl_collision_avoidance.policies.MPCRLStaticObsPolicy import MPCRLStaticObsPolicy
 from mpc_rl_collision_avoidance.policies.SocialMPCPolicy import SocialMPCPolicy
+from mpc_rl_collision_avoidance.policies.SafeGA3CPolicy import SafeGA3CPolicy
+from mpc_rl_collision_avoidance.policies.SimpleNNPolicy import SimpleNNPolicy
+
 from mpc_rl_collision_avoidance.policies.SafeMPCPolicy import SafeMPCPolicy
+from mpc_rl_collision_avoidance.policies.SafeMPCRLNNPolicy import SafeMPCRLNNPolicy
+
+
 from mpc_rl_collision_avoidance.policies.SociallyGuidedMPCPolicy import SociallyGuidedMPCPolicy
 from mpc_rl_collision_avoidance.policies.FirstOrderMPCPolicy import FirstOrderMPCPolicy
 from mpc_rl_collision_avoidance.policies.SecondOrderMPCPolicy import SecondOrderMPCPolicy
@@ -81,7 +87,7 @@ class CollisionAvoidanceEnv(gym.Env):
         #self.ego_policy = "SecondOrderMPCRLPolicy"
 
         self.ego_policy = "MPCRLStaticObsPolicy"
-        self.ego_agent_dynamics = "UnicycleSecondOrderEulerDynamics"
+        self.ego_agent_dynamics = "UnicycleDynamics"
         #self.ego_agent_dynamics = "FirstOrderDynamics"
 
         self.other_agents_policy = "RVOPolicy"
@@ -223,7 +229,7 @@ class CollisionAvoidanceEnv(gym.Env):
             {'which_agents_done': which_agents_done_dict}
 
     def reset(self):
-        if (self.episode_number % Config.PLOT_EVERY_N_EPISODES == 1 or Config.EVALUATE_MODE) and Config.ANIMATE_EPISODES and self.episode_number >= 1:
+        if (self.episode_number % Config.PLOT_EVERY_N_EPISODES == 1 or Config.EVALUATE_MODE) and Config.ANIMATE_EPISODES and self.episode_number >= 1 and self.episode_step_number > 10:
             plot_episode(self.agents, self.obstacles, Config.TRAIN_MODE, self.map, self.episode_number,
                          self.id, circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ,
                          plot_save_dir=self.plot_save_dir,
@@ -330,8 +336,13 @@ class CollisionAvoidanceEnv(gym.Env):
                 self.agents, self.obstacles = eval("tc." + self.scenario[self.scenario_index] + "(number_of_agents=" + str(
                     self.number_of_agents) + ", ego_agent_policy=" + self.ego_policy  + ", other_agents_policy=" + self.other_agents_policy +
                                ", ego_agent_dynamics=" + self.ego_agent_dynamics +", other_agents_dynamics=" + self.other_agents_dynamics
-                                                   + ")")
+                                                 + ")")
         else:
+            scenario_index = 0
+            self.agents, self.obstacles = eval("tc." + self.scenario[scenario_index] + "(number_of_agents=" + str(
+                self.number_of_agents) + ", ego_agent_policy=" + self.ego_policy +
+                                               ", ego_agent_dynamics=" + self.ego_agent_dynamics + ", other_agents_dynamics=" + self.other_agents_dynamics + ", other_agents_policy=" + self.other_agents_policy + ")")
+            """ 
             if self.total_number_of_steps < 200000:
                 # Supervised learning step
                 scenario_index = 0
@@ -356,7 +367,7 @@ class CollisionAvoidanceEnv(gym.Env):
             #scenario_index = np.random.randint(0,len(self.scenario))
             self.agents, self.obstacles = eval("tc."+self.scenario[scenario_index]+"(number_of_agents="+str(self.number_of_agents)+", ego_agent_policy=" + self.ego_policy +
                                ", ego_agent_dynamics=" + self.ego_agent_dynamics +", other_agents_dynamics=" + self.other_agents_dynamics +", other_agents_policy=" + self.other_agents_policy+ ")")
-
+            """
         if self.episode_number == 1:
             self.policies=[]
             ga3c_params = {
@@ -366,7 +377,7 @@ class CollisionAvoidanceEnv(gym.Env):
             }
             for ag in self.agents:
                 if "GA3C" in str(ag.policy):
-                    self.policies.append(GA3CCADRLPolicy())
+                    self.policies.append(eval(str(ag.policy)+"()"))
                     self.policies[-1].initialize_network(**ga3c_params)
                     ag.policy = self.policies[-1]
         else:
@@ -584,6 +595,7 @@ class CollisionAvoidanceEnv(gym.Env):
         return collision_with_agent, collision_with_wall, entered_norm_zone, dist_btwn_nearest_agent
 
     def check_action_for_collisions(self,action,ego_agent,other_agents):
+        agent_inds = list(range(len(self.agents)))
         # NOTE: This method doesn't compute social zones!!!!!
         collision_with_agent = [False for _ in other_agents]
         collision_with_wall = [False for _ in other_agents]
