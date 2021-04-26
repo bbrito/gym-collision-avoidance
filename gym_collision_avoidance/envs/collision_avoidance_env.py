@@ -11,7 +11,7 @@ import itertools
 import copy
 import os
 import matplotlib.pyplot as plt
-
+import random
 from gym_collision_avoidance.envs.config import Config
 #from gym_collision_avoidance.envs.utils import DataHandlerLSTM
 from gym_collision_avoidance.envs.util import find_nearest, rgba2rgb
@@ -240,7 +240,7 @@ class CollisionAvoidanceEnv(gym.Env):
         self.begin_episode = True
         self.episode_step_number = 0
         self._init_agents()
-        #self._init_prediction_model()
+        self._init_prediction_model()
         self._init_static_map()
 
         for state in Config.STATES_IN_OBS:
@@ -258,11 +258,11 @@ class CollisionAvoidanceEnv(gym.Env):
             self.predicted_trajectory = self.prediction_model.query(self.agents)[0]
         else:
             # For the first time step Use CV model
-            self.predicted_trajectory = np.zeros((len(self.agents),1, Config.FORCES_N, 6))
+            self.predicted_trajectory = np.zeros((len(self.agents), Config.FORCES_N, 6))
             for ag_id, agent in enumerate(self.agents):
                 for t in range(Config.FORCES_N):
-                    self.predicted_trajectory[ag_id,0, t,:2] = agent.pos_global_frame + agent.vel_global_frame * Config.FORCES_DT
-                    self.predicted_trajectory[ag_id,0, t, 4:6] = agent.vel_global_frame
+                    self.predicted_trajectory[ag_id, t,:2] = agent.pos_global_frame + agent.vel_global_frame * Config.FORCES_DT
+                    self.predicted_trajectory[ag_id, t, 4:6] = agent.vel_global_frame
         indices = np.arange(len(self.agents))
         for id, agent in enumerate(self.agents):
             agent.policy.predicted_trajectory =  self.predicted_trajectory[indices != id]
@@ -303,18 +303,18 @@ class CollisionAvoidanceEnv(gym.Env):
     def set_agents(self, agents):
         self.default_agents = agents
 
-    #def _init_prediction_model(self):
-        #if self.prediction_model:
-            #if self.episode_number > 1:
-            #    self.prediction_model.reset_states(len(self.agents))
-            #else:
-            #    self.prediction_model.load_model(len(self.agents))
-            #self.plot_policy_name = self.agents[0].policy.str + '_' + str(self.prediction_model)
+    def _init_prediction_model(self):
+        if self.prediction_model:
+            if self.episode_number > 1:
+               self.prediction_model.reset_states(len(self.agents))
+            else:
+               self.prediction_model.load_model(len(self.agents))
+            self.plot_policy_name = self.agents[0].policy.str + '_' + str(self.prediction_model)
 
-        #else:
-        #    self.plot_policy_name = self.agents[0].policy.str + '_CV'
-    #    self.plot_policy_name = self.agents[0].policy.str + '_' + str(self.prediction_model)
-    #    self._prediction_step()
+        else:
+           self.plot_policy_name = self.agents[0].policy.str + '_CV'
+       #self.plot_policy_name = self.agents[0].policy.str + '_' + str(self.prediction_model)
+        self._prediction_step()
 
     def _init_agents(self):
         if self.agents is not None:
@@ -334,21 +334,27 @@ class CollisionAvoidanceEnv(gym.Env):
         else:
             if self.total_number_of_steps < 100000:
                 # Supervised learning step
-                scenario_index = 0
-                self.number_of_agents = 2 # Maximum no. of agents
+                scenario_index = np.random.randint(0,len(self.scenario))
+                self.number_of_agents = 6 # Maximum no. of agents
             # RL steps:
-            elif self.total_number_of_steps < 2e6:
-                scenario_index = 0
+            elif self.total_number_of_steps < 1e6:
+                scenario_index = np.random.randint(0,len(self.scenario))
                 self.number_of_agents = 2
-            elif self.total_number_of_steps < 4e6:
-                scenario_index = 0
+            elif self.total_number_of_steps < 2e6:
+                scenario_index = np.random.randint(0,len(self.scenario))
                 self.number_of_agents = 4
-            elif self.total_number_of_steps < 6e6:
-                scenario_index = 0
+            elif self.total_number_of_steps < 3e6:
+                scenario_index = np.random.randint(0,len(self.scenario))
                 self.number_of_agents = 6
-            elif self.total_number_of_steps >= 6e6:
-                scenario_index = 0
-                self.number_of_agents = 6
+            elif self.total_number_of_steps < 5e6:
+                scenario_index = np.random.randint(0,len(self.scenario))
+                self.number_of_agents = 8
+            elif self.total_number_of_steps < 16e6:
+                scenario_index = np.random.randint(0,len(self.scenario))
+                self.number_of_agents = 10
+            elif self.total_number_of_steps >= 16e6:
+                scenario_index = np.random.randint(0,len(self.scenario))
+                self.number_of_agents = 10
 
             #elif self.total_number_of_steps >= 7e6:
             #    scenario_index = np.random.randint(2,len(self.scenario))
