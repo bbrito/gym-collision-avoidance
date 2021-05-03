@@ -1251,7 +1251,7 @@ def train_agents_swap_circle(number_of_agents=2, ego_agent_policy=MPCPolicy,othe
                 agents.append(Agent(positions_list[ag_id][0], positions_list[ag_id][1],
                                     positions_list[ag_id + 1][0], positions_list[ag_id + 1][1], radius, pref_speed,
                                     None, ego_agent_policy, UnicycleDynamicsMaxAcc,
-                                    [OtherAgentsStatesSensor,OccupancyGridSensor], 0
+                                    [OtherAgentsStatesSensor,OccupancyGridSensor], 0))
                 agents[0].policy.initialize_network(**ga3c_params)
             else:
                 agents.append(Agent(positions_list[0][0], positions_list[0][1],
@@ -1286,10 +1286,10 @@ def train_agents_swap_circle_ewc(number_of_agents=2, ego_agent_policy=MPCPolicy,
         random.seed(seed)
         np.random.seed(seed)
 
-    n_agents = random.randint(2, np.maximum(number_of_agents, 2))
+    n_agents = number_of_agents #random.randint(2, np.maximum(number_of_agents, 2))
 
     positions_list = []
-    other_agents_policy = [RVOPolicy, NonCooperativePolicy]
+    #other_agents_policy = [RVOPolicy, NonCooperativePolicy]
     """
     ga3c_params =  {
          'policy': GA3CCADRLPolicy,
@@ -1328,7 +1328,7 @@ def train_agents_swap_circle_ewc(number_of_agents=2, ego_agent_policy=MPCPolicy,
         positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
     for ag_id in range(int(n_agents/2)):
-        cooperation_coef = np.random.uniform(0.0, 1.0)
+        cooperation_coef = np.random.uniform(0.1, 1.0)
         if np.random.uniform(0,1)>0.8:
             other_agents_policy = NonCooperativePolicy
         else:
@@ -1349,7 +1349,7 @@ def train_agents_swap_circle_ewc(number_of_agents=2, ego_agent_policy=MPCPolicy,
             agents.append(Agent(positions_list[2*ag_id][0], positions_list[2*ag_id][1],
                                 positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1], radius, pref_speed, None, other_agents_policy, other_agents_dynamics,
                       [OtherAgentsStatesSensor], 2*ag_id,cooperation_coef))
-        cooperation_coef = np.random.uniform(0.0, 1.0)
+        cooperation_coef = np.random.uniform(0.1, 1.0)
         if np.random.uniform(0,1)>0.8:
             other_agents_policy = NonCooperativePolicy
         else:

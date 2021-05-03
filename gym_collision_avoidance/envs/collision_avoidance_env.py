@@ -258,7 +258,7 @@ class CollisionAvoidanceEnv(gym.Env):
             self.predicted_trajectory = self.prediction_model.query(self.agents)[0]
         else:
             # For the first time step Use CV model
-            self.predicted_trajectory = np.zeros((len(self.agents),1, Config.FORCES_N, 6))
+            self.predicted_trajectory = np.zeros((len(self.agents),Config.FORCES_N, 6))
             for ag_id, agent in enumerate(self.agents):
                 for t in range(Config.FORCES_N):
                     self.predicted_trajectory[ag_id, t,:2] = agent.pos_global_frame + agent.vel_global_frame * Config.FORCES_DT
@@ -332,7 +332,7 @@ class CollisionAvoidanceEnv(gym.Env):
                                ", ego_agent_dynamics=" + self.ego_agent_dynamics +", other_agents_dynamics=" + self.other_agents_dynamics
                                                    + ")")
         else:
-            if self.total_number_of_steps < 300000:
+            if self.total_number_of_steps < 100000:
                 # Supervised learning step
                 scenario_index = 0
                 self.number_of_agents = 2  # Maximum no. of agents
@@ -343,15 +343,15 @@ class CollisionAvoidanceEnv(gym.Env):
             elif self.total_number_of_steps < 4e6:
                 #scenario_choice = [0,1]
                 scenario_index = 0
-                self.number_of_agents = 4
+                self.number_of_agents = np.random.randint(2,5)
             elif self.total_number_of_steps < 6e6:
                 #scenario_choice = [0, 1, 1]
                 scenario_index = 0
-                self.number_of_agents = 6
+                self.number_of_agents = np.random.randint(2,7)
             elif self.total_number_of_steps >= 6e6:
                 #scenario_choice = [0, 1, 1]
                 scenario_index = 0
-                self.number_of_agents = 6
+                self.number_of_agents = np.random.randint(2,7)
 
             #scenario_index = np.random.randint(0,len(self.scenario))
             self.agents, self.obstacles = eval("tc."+self.scenario[scenario_index]+"(number_of_agents="+str(self.number_of_agents)+ ", seed="+str(self.episode_number)+", ego_agent_policy=" + self.ego_policy +
