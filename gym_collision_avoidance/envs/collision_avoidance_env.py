@@ -341,15 +341,12 @@ class CollisionAvoidanceEnv(gym.Env):
                 scenario_index = 0
                 self.number_of_agents = 2
             elif self.total_number_of_steps < 4e6:
-                #scenario_choice = [0,1]
                 scenario_index = 0
                 self.number_of_agents = np.random.randint(2,5)
             elif self.total_number_of_steps < 6e6:
-                #scenario_choice = [0, 1, 1]
                 scenario_index = 0
                 self.number_of_agents = np.random.randint(2,7)
             elif self.total_number_of_steps >= 6e6:
-                #scenario_choice = [0, 1, 1]
                 scenario_index = 0
                 self.number_of_agents = np.random.randint(2,7)
 
