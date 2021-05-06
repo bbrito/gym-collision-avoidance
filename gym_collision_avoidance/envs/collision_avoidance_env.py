@@ -212,7 +212,7 @@ class CollisionAvoidanceEnv(gym.Env):
                 self.n_timeouts[0] = self.agents[0].ran_out_of_time
                 #if self.agents[0].in_collision or self.episode_number<200:
                 self.prediction_model.data_handler.addEpisodeData(self.agents)
-                if (self.episode_number >= 100) and (self.episode_number%100==0) and (len(self.prediction_model.data_handler.trajectory_set)>=100):
+                if (self.episode_number >= 10) and (self.episode_number%10==0) and (len(self.prediction_model.data_handler.trajectory_set)>=10):
                     self.prediction_model.train_step(self.episode_number,np.mean(self.n_collisions),np.mean(self.n_timeouts))
 
         which_agents_done_dict = {}
