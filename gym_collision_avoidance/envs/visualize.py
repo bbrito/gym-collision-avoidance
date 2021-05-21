@@ -12,7 +12,7 @@ import glob
 import imageio
 from gym_collision_avoidance.envs.config import Config
 import moviepy.editor as mp
-#import pypoman
+import pypoman
 from matplotlib.lines import Line2D
 import math
 matplotlib.rcParams.update({'font.size': 24})
@@ -362,7 +362,8 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, ax2, last_index=-1):
                         overstaand = 1 * math.sin(agent.heading_global_frame)
                         ax2.arrow(0,0, 5, 0, width=0.5, head_width=1.5, head_length=1.5,
                                  fc='yellow')  # agent poiting direction
-                    '''
+
+
                     workspace_constr_a = np.array([[1,0],[0,1],[-1,0],[0,-1]])
                     workspace_constr_b = np.array([20,20,20,20])
 
@@ -372,7 +373,8 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, ax2, last_index=-1):
 
                     vertices = pypoman.polygon.compute_polygon_hull(workspace_constr_a, workspace_constr_b)
                     ax.add_patch(plt.Polygon(vertices, ec=plt_colors[9], fill=True,alpha=0.5))
-                    '''
+
+
                     ''''''
                 # Also display circle at agent position at end of trajectory
                 ind = agent.step_num-1

@@ -2368,14 +2368,16 @@ def test_agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,othe
     agents = []
     positions_list = []
 
+    n_agents = random.randint(2, np.maximum(number_of_agents, 2))
+
     #Add obstacle in the middle
     obstacle = []
 
     # Size of square
-    size_square = np.random.uniform(1, 3)
+    size_square = 3 #np.random.uniform(1, 3)
     # Upper x,y value square
-    x_v_up = np.random.uniform(-4,4)
-    y_v_up = np.random.uniform(-4,4)
+    x_v_up = np.random.uniform(-3,3)
+    y_v_up = np.random.uniform(-3,3)
     # Lower x,y value of square
     x_v_low = x_v_up - size_square
     y_v_low = y_v_up - size_square
@@ -2399,41 +2401,44 @@ def test_agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,othe
     positions_list.append(np.array([goal_x_1, goal_y_1]))
     positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
-    n_agents = random.randint(0,np.maximum(int((number_of_agents-2)/2),0))
-
-    for ag_id in range(n_agents):
-        in_collision = False
-        while not in_collision:
+    for ag_id in range(int(n_agents / 2) - 1):
+        in_collision = True
+        while in_collision:
             distance = np.random.uniform(2.0, 5.0)
             angle = np.random.uniform(-np.pi, np.pi)
             x0_agent_1 = distance * np.cos(angle)
             y0_agent_1 = distance * np.sin(angle)
             goal_x_1 = -x0_agent_1
             goal_y_1 = -y0_agent_1
-            goal= np.array([goal_x_1,goal_y_1])
-            initial_pose= np.array([x0_agent_1, y0_agent_1])
-            if is_pose_valid_with_obstacles(initial_pose, obstacle) and is_pose_valid_with_obstacles(goal,obstacle) and is_pose_valid(goal, positions_list) and is_pose_valid(initial_pose, positions_list):
-                in_collision = True
-            else:
-                in_collision = False
+            goal = np.array([goal_x_1, goal_y_1])
+            initial_pose = np.array([x0_agent_1, y0_agent_1])
+            in_collision = not (
+                        is_pose_valid_with_obstacles(initial_pose, obstacle) and is_pose_valid_with_obstacles(goal,
+                                                                                                              obstacle) and is_pose_valid(
+                    goal, positions_list) and is_pose_valid(initial_pose, positions_list))
         positions_list.append(np.array([goal_x_1, goal_y_1]))
         positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
-
-    for ag_id in range(n_agents+2):
+    for ag_id in range(int(n_agents / 2)):
+        cooperation_coef = 0.5
         if ag_id == 0:
-            agents.append(Agent(positions_list[ag_id - 1][0], positions_list[ag_id - 1][1],
-                                positions_list[ag_id][0], positions_list[ag_id][1], radius, pref_speed,
+            agents.append(Agent(positions_list[0][0], positions_list[0][1],
+                                positions_list[1][0], positions_list[1][1], radius, pref_speed,
                                 None, ego_agent_policy, ego_agent_dynamics,
-                                [OtherAgentsStatesSensor, LaserScanSensor], ag_id))
+                                [OtherAgentsStatesSensor, OccupancyGridSensor], 0))
         else:
-            agents.append(Agent(positions_list[ag_id-1][0], positions_list[ag_id - 1][1],
-                                positions_list[ag_id][0], positions_list[ag_id][1], radius, pref_speed,
+            agents.append(Agent(positions_list[2 * ag_id][0], positions_list[2 * ag_id][1],
+                                positions_list[2 * ag_id + 1][0], positions_list[2 * ag_id + 1][1], radius, pref_speed,
                                 None, other_agents_policy, other_agents_dynamics,
-                                [OtherAgentsStatesSensor], ag_id))
+                                [OtherAgentsStatesSensor], 2 * ag_id, cooperation_coef))
+
+        agents.append(
+            Agent(positions_list[2 * ag_id + 1][0], positions_list[2 * ag_id + 1][1],
+                  positions_list[2 * ag_id][0], positions_list[2 * ag_id][1], radius, pref_speed, None,
+                  other_agents_policy, other_agents_dynamics,
+                  [OtherAgentsStatesSensor], 2 * ag_id + 1, cooperation_coef))
 
     if "Static" in str(agents[0].policy):
-        #agents[0].sensors[1].static_obstacles_manager.obstacle = obstacle
         agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
     return agents, obstacle
@@ -2522,17 +2527,17 @@ def compute_first_agent(min_obs,max_obs,obstacle,min_dist,max_dist,min_range,max
     return positions_list
 
 def compute_other_agents(n_agents,obstacle, positions_list,min_dist, max_dist):
-    for ag_id in range(n_agents):
+    for ag_id in range(int(n_agents/2)-1):
         in_collision = True
         count_stuck = 0
         while in_collision:
             if count_stuck > 50:
                 positions_list = []
                 break
-            distance = np.random.uniform(min_dist, max_dist)
+            distance = np.random.uniform(2.0, 5.0)
             angle = np.random.uniform(-np.pi, np.pi)
-            x0_agent_1 = distance * np.cos(angle)
-            y0_agent_1 = distance * np.sin(angle)
+            x0_agent_1 = distance*np.cos(angle)
+            y0_agent_1 = distance*np.sin(angle)
             goal_x_1 = -x0_agent_1
             goal_y_1 = -y0_agent_1
             goal=np.array([goal_x_1,goal_y_1])
@@ -2556,10 +2561,10 @@ def train_stage_1(number_of_agents=4, ego_agent_policy=MPCPolicy,other_agents_po
     pref_speed = 1.0 #np.random.uniform(1.0, 0.5)
     radius = 0.5 #np.random.uniform(0.4, 0.6)
     agents = []
-    n_agents = random.randint(1, np.maximum(number_of_agents - 1, 1))  # no. of other agents is randomly chosen
+    n_agents = random.randint(2, np.maximum(number_of_agents, 2))  # no. of other agents is randomly chosen
 
-    min_obs = 4#1
-    max_obs = 4#3
+    min_obs = 1
+    max_obs = 3
     ready = False
 
     #Minimum and maximum distance of agent
@@ -2574,23 +2579,29 @@ def train_stage_1(number_of_agents=4, ego_agent_policy=MPCPolicy,other_agents_po
         obstacle = compute_random_obstacles(min_obs, max_obs, min_range, max_range)
         positions_list = compute_first_agent(min_obs,max_obs,obstacle, min_dist,max_dist, min_range,max_range)
         positions_list = compute_other_agents(n_agents, obstacle, positions_list, min_dist,max_dist)
-        if len(positions_list) == ((n_agents+1)*2):
+        if len(positions_list) == int(n_agents / 2) * 2:
             ready = True
 
-
-    for ag_id in range(n_agents+1):
+    for ag_id in range(int(n_agents / 2)):
+        cooperation_coef = 0.5
         if ag_id == 0:
-            agents.append(Agent(positions_list[2 * ag_id + 1][0], positions_list[2 * ag_id + 1][1],
-                                positions_list[2 * ag_id][0], positions_list[2 * ag_id][1], radius, pref_speed,
+            agents.append(Agent(positions_list[0][0], positions_list[0][1],
+                                positions_list[1][0], positions_list[1][1], radius, pref_speed,
                                 None, ego_agent_policy, ego_agent_dynamics,
-                                [OtherAgentsStatesSensor, OccupancyGridSensor], ag_id))
+                                [OtherAgentsStatesSensor, LaserScanSensor], 0))
         else:
-            agents.append(Agent(positions_list[2 * ag_id + 1][0], positions_list[2 * ag_id + 1][1],
-                                positions_list[2 * ag_id][0], positions_list[2 * ag_id][1], radius, pref_speed,
+            agents.append(Agent(positions_list[2 * ag_id][0], positions_list[2 * ag_id][1],
+                                positions_list[2 * ag_id + 1][0], positions_list[2 * ag_id + 1][1], radius, pref_speed,
                                 None, other_agents_policy, other_agents_dynamics,
-                                [OtherAgentsStatesSensor], ag_id))
-    if hasattr(agents[0].policy, 'static_obstacles_manager'):
-        # agents[0].sensors[1].static_obstacles_manager.obstacle = obstacle
+                                [OtherAgentsStatesSensor], 2 * ag_id, cooperation_coef))
+
+        agents.append(
+            Agent(positions_list[2 * ag_id + 1][0], positions_list[2 * ag_id + 1][1],
+                  positions_list[2 * ag_id][0], positions_list[2 * ag_id][1], radius, pref_speed, None,
+                  other_agents_policy, other_agents_dynamics,
+                  [OtherAgentsStatesSensor], 2 * ag_id + 1, cooperation_coef))
+
+    if "Static" in str(agents[0].policy):
         agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
     return agents, obstacle
@@ -2612,15 +2623,15 @@ def train_stage_2(number_of_agents=10, ego_agent_policy=MPCPolicy,other_agents_p
         random.seed(seed)
         np.random.seed(seed)
 
-    n_agents = random.randint(1, np.maximum(number_of_agents - 1, 1))
+    n_agents = number_of_agents#random.randint(2, np.maximum(number_of_agents, 2))
 
-    min_obs = 6#1
-    max_obs = 6#5
+    min_obs = 2
+    max_obs = 5
     ready = False
 
     # Minimum and maximum distance of agent
-    min_dist = 4.0#2.0
-    max_dist = 8.0#6.0
+    min_dist = 2.0
+    max_dist = 6.0
 
     # Minimum and maximum distance of obstacles
     min_range = -5.0
@@ -2630,22 +2641,29 @@ def train_stage_2(number_of_agents=10, ego_agent_policy=MPCPolicy,other_agents_p
         obstacle = compute_random_obstacles(min_obs, max_obs, min_range, max_range)
         positions_list = compute_first_agent(min_obs, max_obs, obstacle, min_dist, max_dist, min_range, max_range)
         positions_list = compute_other_agents(n_agents, obstacle, positions_list, min_dist, max_dist)
-        if len(positions_list) == ((n_agents+1) * 2):
+        if len(positions_list) == int(n_agents / 2) * 2:
             ready = True
 
-    for ag_id in range(n_agents+1):
+    for ag_id in range(int(n_agents / 2)):
+        cooperation_coef = 0.5
         if ag_id == 0:
-            agents.append(Agent(positions_list[2 * ag_id + 1][0], positions_list[2 * ag_id + 1][1],
-                                positions_list[2 * ag_id][0], positions_list[2 * ag_id][1], radius, pref_speed,
+            agents.append(Agent(positions_list[0][0], positions_list[0][1],
+                                positions_list[1][0], positions_list[1][1], radius, pref_speed,
                                 None, ego_agent_policy, ego_agent_dynamics,
-                                [OtherAgentsStatesSensor, OccupancyGridSensor], ag_id))
+                                [OtherAgentsStatesSensor, LaserScanSensor], 0))
         else:
-            agents.append(Agent(positions_list[2 * ag_id + 1][0], positions_list[2 * ag_id + 1][1],
-                                positions_list[2 * ag_id][0], positions_list[2 * ag_id][1], radius, pref_speed,
+            agents.append(Agent(positions_list[2 * ag_id][0], positions_list[2 * ag_id][1],
+                                positions_list[2 * ag_id + 1][0], positions_list[2 * ag_id + 1][1], radius, pref_speed,
                                 None, other_agents_policy, other_agents_dynamics,
-                                [OtherAgentsStatesSensor], ag_id))
+                                [OtherAgentsStatesSensor], 2 * ag_id, cooperation_coef))
 
-    if "MPCRLStaticObsPolicy" == str(agents[0].policy):
+        agents.append(
+            Agent(positions_list[2 * ag_id + 1][0], positions_list[2 * ag_id + 1][1],
+                  positions_list[2 * ag_id][0], positions_list[2 * ag_id][1], radius, pref_speed, None,
+                  other_agents_policy, other_agents_dynamics,
+                  [OtherAgentsStatesSensor], 2 * ag_id + 1, cooperation_coef))
+
+    if "Static" in str(agents[0].policy):
         agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
     return agents, obstacle
@@ -2716,55 +2734,60 @@ def agent_with_door(number_of_agents=4, ego_agent_policy=MPCPolicy, other_agents
         random.seed(seed)
         np.random.seed(seed)
 
+    n_agents = random.randint(2, np.maximum(number_of_agents, 2))
+
     #Add door
     obstacle = []
-    obstacle_1 = [(-2, 0.5), (-10, 0.5), (-10, -0.5), (-2, -0.5)]
-    obstacle_2 = [(10, 0.5), (2, 0.5), (2, -0.5), (10, -0.5)]
+    obstacle_1 = [(-2, 1), (-20, 1), (-20, -1), (-2, -1)]
+    obstacle_2 = [(20, 1), (2, 1), (2, -1), (20, -1)]
     obstacle.extend([obstacle_1,obstacle_2])
 
     positions_list = []
 
     #Define initial agent
-    x0_agent_1 = np.random.uniform(-8.0, 8.0)
-    y0_agent_1 = np.random.uniform(4.0, 8.0)
+    sign = random.choice((-1,1))
+    x0_agent_1 = np.random.uniform(-7.0, 7.0)
+    y0_agent_1 = sign*np.random.uniform(3.0, 5.0)
     goal_x_1 = -x0_agent_1
     goal_y_1 = -y0_agent_1
 
     positions_list.append(np.array([goal_x_1,goal_y_1]))
     positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
-    n_agents = random.randint(1, np.maximum(number_of_agents-1,1))
-
-    #if not seed:
-    #    n_agents = number_of_agents - 1
-
-    for ag_id in range(n_agents):
+    for ag_id in range(int(n_agents/2)-1):
         in_collision = False
         while not in_collision:
-            x0_agent_1 = np.random.uniform(-8.0, 8.0)
-            y0_agent_1 = np.random.uniform(4.0, 8.0)
+            sign = random.choice((-1, 1))
+            x0_agent_1 = np.random.uniform(-7.0, 7.0)
+            y0_agent_1 = sign * np.random.uniform(3.0, 5.0)
             goal_x_1 = -x0_agent_1
             goal_y_1 = -y0_agent_1
             goal=np.array([goal_x_1,goal_y_1])
             initial_pose= np.array([x0_agent_1, y0_agent_1])
-            in_collision = is_pose_valid(goal, positions_list) or is_pose_valid(initial_pose, positions_list)
+            in_collision = is_pose_valid(goal, positions_list) and is_pose_valid(initial_pose, positions_list)
         positions_list.append(np.array([goal_x_1, goal_y_1]))
         positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
-    for ag_id in range(n_agents+1):
+    for ag_id in range(int(n_agents/2)):
+        cooperation_coef = 0.5
         if ag_id == 0:
-            agents.append(Agent(positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1],
-                              positions_list[2*ag_id][0], positions_list[2*ag_id][1], radius, pref_speed,
-                              None, ego_agent_policy, ego_agent_dynamics,
-                              [OtherAgentsStatesSensor,OccupancyGridSensor], ag_id))
+            agents.append(Agent(positions_list[0][0], positions_list[0][1],
+                                positions_list[1][0], positions_list[1][1], radius, pref_speed,
+                                None, ego_agent_policy, ego_agent_dynamics,
+                                [OtherAgentsStatesSensor, OccupancyGridSensor], 0))
         else:
-            agents.append(Agent(positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1],
-                              positions_list[2*ag_id][0], positions_list[2*ag_id][1], radius, pref_speed,
-                              None, other_agents_policy, other_agents_dynamics,
-                              [OtherAgentsStatesSensor], ag_id))
+            agents.append(Agent(positions_list[2 * ag_id][0], positions_list[2 * ag_id][1],
+                                positions_list[2 * ag_id + 1][0], positions_list[2 * ag_id + 1][1], radius, pref_speed,
+                                None, other_agents_policy, other_agents_dynamics,
+                                [OtherAgentsStatesSensor], 2 * ag_id, cooperation_coef))
 
-    if hasattr(agents[0].policy, 'static_obstacles_manager'):
-        # agents[0].sensors[1].static_obstacles_manager.obstacle = obstacle
+        agents.append(
+            Agent(positions_list[2 * ag_id + 1][0], positions_list[2 * ag_id + 1][1],
+                  positions_list[2 * ag_id][0], positions_list[2 * ag_id][1], radius, pref_speed, None,
+                  other_agents_policy, other_agents_dynamics,
+                  [OtherAgentsStatesSensor], 2 * ag_id + 1, cooperation_coef))
+
+    if "Static" in str(agents[0].policy):
         agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
     return agents, obstacle
@@ -2983,77 +3006,60 @@ def agent_with_corridor(number_of_agents=4, ego_agent_policy=RVOPolicy,other_age
         random.seed(seed)
         np.random.seed(seed)
 
+    n_agents = random.randint(2, np.maximum(number_of_agents, 2))
+    policy = other_agents_policy
     # Corridor scenario
     obstacle = []
-    obstacle_1 = [(20,8), (-20, 8), (-20, 5), (20, 5)]
-    obstacle_2 = [(20, -5), (-20, -5), (-20, -8), (20, -8)]
+    obstacle_1 = [(10, 4.5), (-10, 4.5), (-10, 3), (10, 3)]
+    obstacle_2 = [(10, -3), (-10, -3), (-10, -4.5), (10, -4.5)]
+    #obstacle_3 = [(-2, -2), (-3, -2), (-3, -3), (-2, -3)]
+    #obstacle_4 = [(3, 3), (2, 3), (2, 2), (3, 2)]
     obstacle.extend([obstacle_1, obstacle_2])
 
-    ini_positions_list = []
-    goal_positions_list = []
+    positions_list = []
 
     sign = random.choice((-1,1))
-    x0_agent_1 = sign*np.random.uniform(7.0, 12.0)
-    y0_agent_1 = np.random.uniform(-4, 4)
+    x0_agent_1 = sign*np.random.uniform(4.0, 8.0)
+    y0_agent_1 = np.random.uniform(-2.5, 2.5)
     goal_x_1 = -x0_agent_1
     goal_y_1 = y0_agent_1*random.choice((-1,1))
-    if sign ==1:
-        ini_positions_list.append(np.array([x0_agent_1, y0_agent_1]))
-        goal_positions_list.append(np.array([goal_x_1, goal_y_1]))
-    else:
-        ini_positions_list.append(np.array([goal_x_1, goal_y_1]))
-        goal_positions_list.append(np.array([x0_agent_1, y0_agent_1]))
-    #n_agents = random.randint(0,np.maximum(number_of_agents-1,0))
-    #if not seed:
-    n_agents = number_of_agents - 2
+    positions_list.append(np.array([goal_x_1, goal_y_1]))
+    positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
-    for ag_id in range(int(n_agents/2)):
-        in_pose_valid_ = False
-        while not in_pose_valid_:
+
+    for ag_id in range(int(n_agents/2)-1):
+        in_collision = False
+        while not in_collision:
             sign = random.choice((-1, 1))
-            x0_agent_1 = sign*np.random.uniform(7.0, 12.0)
-            y0_agent_1 = np.random.uniform(-4, 4)
+            x0_agent_1 = np.random.uniform(4.0, 8.0)
+            y0_agent_1 = sign * np.random.uniform(2.5, -2.5)
             goal_x_1 = -x0_agent_1
-            goal_y_1 = y0_agent_1
+            goal_y_1 = -y0_agent_1
             goal=np.array([goal_x_1,goal_y_1])
             initial_pose= np.array([x0_agent_1, y0_agent_1])
-            if sign == 1:
-                in_pose_valid_ = is_pose_valid(goal, goal_positions_list) and is_pose_valid(initial_pose,
-                                                                                            ini_positions_list)
-            else:
-                in_pose_valid_ = is_pose_valid(goal, ini_positions_list) and is_pose_valid(initial_pose,
-                                                                                           goal_positions_list)
-        if sign == 1:
-            ini_positions_list.append(np.array([x0_agent_1, y0_agent_1]))
-            goal_positions_list.append(np.array([goal_x_1, goal_y_1]))
-        else:
-            ini_positions_list.append(np.array([goal_x_1, goal_y_1]))
-            goal_positions_list.append(np.array([x0_agent_1, y0_agent_1]))
+            in_collision = is_pose_valid(goal, positions_list) and is_pose_valid(initial_pose, positions_list)
+        positions_list.append(np.array([goal_x_1, goal_y_1]))
+        positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
-    random.shuffle(ini_positions_list)
-    random.shuffle(goal_positions_list)
 
-    for ag_id in range(int(n_agents/2)+1):
+    for ag_id in range(int(n_agents / 2)):
+        cooperation_coef = 0.5
         if ag_id == 0:
-            agents.append(Agent(ini_positions_list[ag_id][0], ini_positions_list[ag_id][1],
-                              goal_positions_list[ag_id][0], goal_positions_list[ag_id][1], radius, pref_speed,
-                              None, ego_agent_policy, ego_agent_dynamics,
-                              [OtherAgentsStatesSensor, OccupancyGridSensor], 2*ag_id))
+            agents.append(Agent(positions_list[0][0], positions_list[0][1],
+                                positions_list[1][0], positions_list[1][1], radius, pref_speed,
+                                None, ego_agent_policy, ego_agent_dynamics,
+                                [OtherAgentsStatesSensor, OccupancyGridSensor], 0))
         else:
-            agents.append(Agent(ini_positions_list[ag_id][0], ini_positions_list[ag_id][1],
-                              goal_positions_list[ag_id][0], goal_positions_list[ag_id][1], radius, pref_speed,
-                              None, other_agents_policy, other_agents_dynamics,
-                              [OtherAgentsStatesSensor, OccupancyGridSensor], 2*ag_id))
+            agents.append(Agent(positions_list[2 * ag_id][0], positions_list[2 * ag_id][1],
+                                positions_list[2 * ag_id + 1][0], positions_list[2 * ag_id + 1][1], radius, pref_speed,
+                                None, other_agents_policy, other_agents_dynamics,
+                                [OtherAgentsStatesSensor], 2 * ag_id, cooperation_coef))
 
-        policy = random.choice([other_agents_policy, NonCooperativePolicy])
-        cooperation_coef_ = np.random.uniform(0.5, 2.0)
-        agents.append(Agent(goal_positions_list[ag_id][0], goal_positions_list[ag_id][1],
-                            ini_positions_list[ag_id][0], ini_positions_list[ag_id][1], radius, pref_speed,
-                            None, policy, other_agents_dynamics,
-                            [OtherAgentsStatesSensor, OccupancyGridSensor], 2*ag_id+1,cooperation_coef_))
-
-
-        agents[ag_id].end_condition = ec._corridor_check_if_at_goal
+        agents.append(
+            Agent(positions_list[2 * ag_id + 1][0], positions_list[2 * ag_id + 1][1],
+                  positions_list[2 * ag_id][0], positions_list[2 * ag_id][1], radius, pref_speed, None,
+                  other_agents_policy, other_agents_dynamics,
+                  [OtherAgentsStatesSensor], 2 * ag_id + 1, cooperation_coef))
 
     agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
@@ -3208,6 +3214,8 @@ def agent_with_crossing(number_of_agents=1, ego_agent_policy=MPCPolicy, other_ag
         random.seed(seed)
         np.random.seed(seed)
 
+    n_agents = number_of_agents#random.randint(2, np.maximum(number_of_agents, 2))
+
     # Corridor scenario
     obstacle = []
     obstacle_1 = [(10,10), (2, 10), (2, 2), (10, 2)]
@@ -3216,8 +3224,8 @@ def agent_with_crossing(number_of_agents=1, ego_agent_policy=MPCPolicy, other_ag
     obstacle_4 = [(-2, -2), (-10, -2), (-10, -10), (-2, -10)]
     obstacle.extend([obstacle_1, obstacle_2, obstacle_3, obstacle_4])
 
-    positions_list_1 = []
-    Long = np.random.uniform(7.0, 10.0)
+    positions_list = []
+    Long = np.random.uniform(5.0, 8.0)
     Short = np.random.uniform(-1.0, 1.0)
     total1 = [Long, Short]
     total2 = [Short, Long]
@@ -3226,17 +3234,13 @@ def agent_with_crossing(number_of_agents=1, ego_agent_policy=MPCPolicy, other_ag
     y0_agent_1 = total[1]
     goal_x_1 = -total[0]
     goal_y_1 = -total[1]
-    positions_list_1.append(np.array([goal_x_1,goal_y_1]))
-    positions_list_1.append(np.array([x0_agent_1, y0_agent_1]))
+    positions_list.append(np.array([goal_x_1,goal_y_1]))
+    positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
-    n_agents = random.randint(0,np.maximum(number_of_agents-1,0))
-    if not seed:
-        n_agents = number_of_agents - 1
-
-    for ag_id in range(n_agents):
+    for ag_id in range(int(n_agents/2)-1):
         in_collision = False
         while not in_collision:
-            Long = np.random.uniform(7.0, 10.0)
+            Long = np.random.uniform(5.0, 8.0)
             Short = np.random.uniform(-1.0, 1.0)
             total1 = [Long, Short]
             total2 = [Short, Long]
@@ -3247,24 +3251,30 @@ def agent_with_crossing(number_of_agents=1, ego_agent_policy=MPCPolicy, other_ag
             goal_y_1 = -total[1]
             goal=np.array([goal_x_1,goal_y_1])
             initial_pose= np.array([x0_agent_1, y0_agent_1])
-            in_collision = is_pose_valid(goal, positions_list_1) or is_pose_valid(initial_pose, positions_list_1)
-        positions_list_1.append(np.array([goal_x_1, goal_y_1]))
-        positions_list_1.append(np.array([x0_agent_1, y0_agent_1]))
+            in_collision = is_pose_valid(goal, positions_list) or is_pose_valid(initial_pose, positions_list)
+        positions_list.append(np.array([goal_x_1, goal_y_1]))
+        positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
-    for ag_id in range(n_agents+1):
+    for ag_id in range(int(n_agents/2)):
+        cooperation_coef = 0.5
         if ag_id == 0:
-            agents.append(Agent(positions_list_1[2*ag_id+1][0], positions_list_1[2*ag_id+1][1],
-                              positions_list_1[2*ag_id][0], positions_list_1[2*ag_id][1], radius, pref_speed,
-                              None, ego_agent_policy, ego_agent_dynamics,
-                              [OtherAgentsStatesSensor,OccupancyGridSensor], ag_id))
+            agents.append(Agent(positions_list[0][0], positions_list[0][1],
+                                positions_list[1][0], positions_list[1][1], radius, pref_speed,
+                                None, ego_agent_policy, ego_agent_dynamics,
+                                [OtherAgentsStatesSensor, LaserScanSensor], 0))
         else:
-            agents.append(Agent(positions_list_1[2*ag_id+1][0], positions_list_1[2*ag_id+1][1],
-                              positions_list_1[2*ag_id][0], positions_list_1[2*ag_id][1], radius, pref_speed,
-                              None, other_agents_policy, other_agents_dynamics,
-                              [OtherAgentsStatesSensor], ag_id))
+            agents.append(Agent(positions_list[2 * ag_id][0], positions_list[2 * ag_id][1],
+                                positions_list[2 * ag_id + 1][0], positions_list[2 * ag_id + 1][1], radius, pref_speed,
+                                None, other_agents_policy, other_agents_dynamics,
+                                [OtherAgentsStatesSensor], 2 * ag_id, cooperation_coef))
 
-    if hasattr(agents[0].policy, 'static_obstacles_manager'):
-        # agents[0].sensors[1].static_obstacles_manager.obstacle = obstacle
+        agents.append(
+            Agent(positions_list[2 * ag_id + 1][0], positions_list[2 * ag_id + 1][1],
+                  positions_list[2 * ag_id][0], positions_list[2 * ag_id][1], radius, pref_speed, None,
+                  other_agents_policy, other_agents_dynamics,
+                  [OtherAgentsStatesSensor], 2 * ag_id + 1, cooperation_coef))
+
+    if "Static" in str(agents[0].policy):
         agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
     return agents, obstacle

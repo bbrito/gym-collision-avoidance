@@ -78,9 +78,9 @@ class CollisionAvoidanceEnv(gym.Env):
         self.number_of_agents = 2
         self.scenario = Config.SCENARIOS_FOR_TRAINING
 
-        self.ego_policy = "SecondOrderMPCRLPolicy"
+        #self.ego_policy = "SecondOrderMPCRLPolicy"
 
-        #self.ego_policy = "MPCRLStaticObsPolicy"
+        self.ego_policy = "MPCRLStaticObsPolicy"
         self.ego_agent_dynamics = "UnicycleSecondOrderEulerDynamics"
         #self.ego_agent_dynamics = "FirstOrderDynamics"
 
@@ -332,23 +332,44 @@ class CollisionAvoidanceEnv(gym.Env):
                                ", ego_agent_dynamics=" + self.ego_agent_dynamics +", other_agents_dynamics=" + self.other_agents_dynamics
                                                    + ")")
         else:
-            if self.total_number_of_steps < 100000:
+            if self.total_number_of_steps < 300000:
                 # Supervised learning step
                 scenario_index = 0
-                self.number_of_agents = 2  # Maximum no. of agents
-            # RL steps:
-            elif self.total_number_of_steps < 2e6:
+                self.number_of_agents = 2# Maximum no. of agents
+                # RL steps:
+            elif self.total_number_of_steps < 3e6:
                 scenario_index = 0
                 self.number_of_agents = 2
-            elif self.total_number_of_steps < 4e6:
-                scenario_index = 0
-                self.number_of_agents = np.random.randint(2,5)
             elif self.total_number_of_steps < 6e6:
-                scenario_index = 0
-                self.number_of_agents = np.random.randint(2,7)
-            elif self.total_number_of_steps >= 6e6:
-                scenario_index = 0
-                self.number_of_agents = np.random.randint(2,7)
+                scenario_index = 1
+                self.number_of_agents = 4
+            elif self.total_number_of_steps < 9e6:
+                scenario_index = 2
+                self.number_of_agents = 4
+            # elif self.total_number_of_steps < 12e6:
+            #     scenario_choice = [2,3]
+            #     scenario_index = np.random.choice(scenario_choice)
+            #     self.number_of_agents = 6
+            #     if scenario_index == 2:
+            #         self.number_of_agents = 4
+            # elif self.total_number_of_steps < 15e6:
+            #     scenario_choice = [2, 3, 4]
+            #     scenario_index = np.random.choice(scenario_choice)
+            #     self.number_of_agents = 6
+            #     if scenario_index == 2:
+            #         self.number_of_agents = 4
+            # elif self.total_number_of_steps < 18e6:
+            #     scenario_choice = [2, 3, 4, 5]
+            #     scenario_index = np.random.choice(scenario_choice)
+            #     self.number_of_agents = 6
+            #     if scenario_index == 2:
+            #         self.number_of_agents = 4
+            elif self.total_number_of_steps >= 9e6:
+                scenario_choice = 2 #[2, 3, 4, 5]
+                #scenario_index = np.random.choice(scenario_choice)
+                self.number_of_agents = 4
+                # if scenario_index == 2:
+                #     self.number_of_agents = 4
 
             #scenario_index = np.random.randint(0,len(self.scenario))
             self.agents, self.obstacles = eval("tc."+self.scenario[scenario_index]+"(number_of_agents="+str(self.number_of_agents)+ ", seed="+str(self.episode_number)+", ego_agent_policy=" + self.ego_policy +
