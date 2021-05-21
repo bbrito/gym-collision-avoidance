@@ -425,7 +425,7 @@ def plot_Angular_map_vector(ax2, Angular_Map, ag, max_range=6):
     number_elements = Angular_Map.shape[0]
     cmap = plt.get_cmap('gnuplot')
 
-    min_angle = ag.heading_global_frame -np.pi
+    min_angle = ag.heading_global_frame - np.pi
 
     for ii in range(number_elements):
         angle_start = (min_angle + ii * (2*np.pi/Config.NUM_OF_SLICES)) * 180 / np.pi

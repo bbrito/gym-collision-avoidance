@@ -93,7 +93,7 @@ class OccupancyGridSensor(Sensor):
         if self.plot:
             self.plot_top_down_map(top_down_map.map,ego_agent_pos_idx, start_idx_x, start_idx_y, ego_agent_heading, title='Original')
             self.plot_top_down_map(float_map, ego_agent_pos_idx, start_idx_x, start_idx_y, ego_agent_heading, title='Rotated')
-            self.plot_batch_grid(batch_grid)
+            self.plot_batch_grid(batch_grid, ego_agent_heading)
 
         return batch_grid
 
@@ -101,27 +101,28 @@ class OccupancyGridSensor(Sensor):
     def plot_top_down_map(self, top_down_map, ego_agent_idx, start_idx_x, start_idx_y, heading, title):
         fig = plt.figure(title)
         ax = fig.subplots(1)
-        ax.imshow(top_down_map, aspect='equal')
+        ax.imshow(top_down_map, aspect='equal', cmap='Blues')
         ax.scatter(ego_agent_idx[1], ego_agent_idx[0], s=100, c='red', marker='o')
         rect = patches.Rectangle((start_idx_y, start_idx_x), self.x_width, self.y_width, linewidth=1, edgecolor='r', facecolor='none')
         ax.add_patch(rect)
         aanliggend = 20 * math.cos(heading)
-        overstaand = -20 * math.sin(heading)
+        overstaand = 20 * math.sin(heading)
         if 'Rotated' == str(title):
-            ax.arrow(ego_agent_idx[1], ego_agent_idx[0], 20,0, width=3, head_width=10,
-                     head_length=10, fc='yellow')  # agent poiting direction
+            ax.arrow(ego_agent_idx[1], ego_agent_idx[0], 20,0, head_width=5, head_length=5)  # agent poiting direction
         else:
-            ax.arrow(ego_agent_idx[1], ego_agent_idx[0], aanliggend, overstaand,width=3, fc='yellow', head_width=10, head_length=10)  # agent poiting direction
-
+            ax.arrow(ego_agent_idx[1], ego_agent_idx[0], aanliggend, overstaand,head_width=5, head_length=5)  # agent poiting direction
+        ax.set_axis_off()
         plt.show()
 
-    def plot_batch_grid(self, batch_grid):
+    def plot_batch_grid(self, batch_grid,heading):
         fig = plt.figure("batch_grid")
         ax = fig.subplots(1)
-        ax.imshow(batch_grid, aspect='equal')
+        ax.imshow(batch_grid, aspect='equal', cmap='Blues')
+        aanliggend = 20 * math.cos(heading)
+        overstaand = 20 * math.sin(heading)
         ax.scatter(self.x_width/2, self.y_width/2, s=100, c='red', marker='o')
-        ax.arrow(self.x_width/2, self.y_width/2, 10, 0,width=1, head_width=3,head_length=3, fc='yellow')  # agent poiting direction
-
+        ax.arrow(self.x_width/2, self.y_width/2, 20,0,head_width=2, head_length=2)  # agent poiting direction
+        ax.set_axis_off()
         plt.show()
 
     def resize(self, og_map):
