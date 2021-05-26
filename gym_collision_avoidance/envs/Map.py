@@ -5,6 +5,7 @@ import scipy.misc
 import matplotlib.pyplot as plt
 from PIL import Image
 import time
+import cv2
 
 class Map():
     def __init__(self, x_width, y_width, grid_cell_size, map_filename=None):
@@ -152,24 +153,70 @@ class Map():
         return occupancy_grid
 
     def get_occupancy_grid2(self, obstacles):
-        #If I ever want to use this (but this is much slower):
-        # self.static_map = Image.open('../gym-collision-avoidance/gym_collision_avoidance/envs/world_maps/WORLDMAP.png').convert('L')
-        # self.static_map = self.static_map.resize(self.dims)
-        # self.static_map.save('../gym-collision-avoidance/gym_collision_avoidance/envs/world_maps/resizedWORLDMAP.png')
-        # MAP = np.array(self.static_map.getdata()).reshape((self.static_map.size[1], self.static_map.size[0]))
-        # self.static_map = np.where(MAP < 255, True, False)
-        fig = plt.figure()
-        plt.clf()
-        plt.xlim([-15, 15])
-        plt.ylim([-15, 15])
-        ax = fig.add_subplot(1, 1, 1)
-        for obs in obstacles:
-            ax.add_patch(plt.Polygon(obs, fill=True))
-        plt.axis('off')
-        #check = fig.savefig('../gym-collision-avoidance/gym_collision_avoidance/envs/world_maps/WORLDMAP.png', bbox_inches='tight')
-        plt.close()
 
-        #print("hoi")
+        # fig = plt.figure()
+        # plt.clf()
+        # plt.xlim([-25, 25])
+        # plt.ylim([-25, 25])
+        # ax = fig.add_subplot(1, 1, 1)
+        # for obs in obstacles:
+        #     ax.add_patch(plt.Polygon(obs, fill=True))
+        # plt.axis('off')
+        # check = fig.savefig('../gym-collision-avoidance/gym_collision_avoidance/envs/world_maps/WORLDMAP.png', bbox_inches='tight')
+        # plt.close()
+        occupancy_grid = Image.open(
+            '../gym-collision-avoidance/gym_collision_avoidance/envs/world_maps/001.png').convert('L')
+        occupancy_grid = occupancy_grid.resize(self.dims)
+        occupancy_grid.save('../gym-collision-avoidance/gym_collision_avoidance/envs/world_maps/resizedWORLDMAP.png')
+        MAP = np.array(occupancy_grid.getdata()).reshape((occupancy_grid.size[1], occupancy_grid.size[0]))
+        occupancy_grid = np.where(MAP < 255, True, False)
+
+
+        # # Dit werkt nog niet echt goed
+        # occupancy_grid = np.where(MAP < 255, 0, 255)
+        # occupancy_grid = occupancy_grid.astype('uint8')
+        # # Detect polygons
+        # _, threshold = cv2.threshold(occupancy_grid, 240, 255, cv2.THRESH_BINARY)
+        # contours, _ = cv2.findContours(threshold, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        # font = cv2.FONT_HERSHEY_COMPLEX
+        #
+        # # Make list of polygons with its corners
+        # corners_polygons = []
+        # for cnt in contours:
+        #     approx = cv2.approxPolyDP(cnt, 0.01 * cv2.arcLength(cnt, True), True)
+        #
+        #     # Convert corners to world coordinates
+        #     approx_list = approx.tolist()  # Set correct format
+        #     corners = []
+        #
+        #     for pos in approx_list:
+        #         world_pos = pos #map_to_world(pos, resolution, map_origin)  # Convert to world coordinates
+        #         corners.append(world_pos)
+        #
+        #     corners_polygons.append(corners)
+        #
+        #     cv2.drawContours(occupancy_grid, [approx], 0, (0), 5)
+        #     x = approx.ravel()[0]
+        #     y = approx.ravel()[1]
+        #
+        #     if len(approx) == 3:
+        #         cv2.putText(occupancy_grid, "Triangle", (x, y), font, 1, (0))
+        #     elif len(approx) == 4:
+        #         cv2.putText(occupancy_grid, "Rectangle", (x, y), font, 1, (0))
+        #     elif len(approx) == 5:
+        #         cv2.putText(occupancy_grid, "Pentagon", (x, y), font, 1, (0))
+        #     elif 6 < len(approx) < 15:
+        #         cv2.putText(occupancy_grid, "Ellipse", (x, y), font, 1, (0))
+        #     else:
+        #         cv2.putText(occupancy_grid, "Circle", (x, y), font, 1, (0))
+        #
+        # fig = plt.figure()
+        # ax = fig.subplots(1)
+        # ax.imshow(occupancy_grid)
+        # plt.show()
+        return occupancy_grid
+
+
 
 
 

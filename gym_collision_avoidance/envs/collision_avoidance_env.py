@@ -11,7 +11,7 @@ import itertools
 import copy
 import os
 import matplotlib.pyplot as plt
-
+import random
 from gym_collision_avoidance.envs.config import Config
 #from gym_collision_avoidance.envs.utils import DataHandlerLSTM
 from gym_collision_avoidance.envs.util import find_nearest, rgba2rgb
@@ -78,9 +78,9 @@ class CollisionAvoidanceEnv(gym.Env):
         self.number_of_agents = 2
         self.scenario = Config.SCENARIOS_FOR_TRAINING
 
-        self.ego_policy = "SecondOrderMPCRLPolicy"
+        #self.ego_policy = "SecondOrderMPCRLPolicy"
 
-        #self.ego_policy = "MPCRLStaticObsPolicy"
+        self.ego_policy = "MPCStaticObsPolicy"
         self.ego_agent_dynamics = "UnicycleSecondOrderEulerDynamics"
         #self.ego_agent_dynamics = "FirstOrderDynamics"
 
@@ -240,7 +240,7 @@ class CollisionAvoidanceEnv(gym.Env):
         self.begin_episode = True
         self.episode_step_number = 0
         self._init_agents()
-        self._init_prediction_model()
+        #self._init_prediction_model()
         self._init_static_map()
 
         for state in Config.STATES_IN_OBS:
@@ -258,11 +258,11 @@ class CollisionAvoidanceEnv(gym.Env):
             self.predicted_trajectory = self.prediction_model.query(self.agents)[0]
         else:
             # For the first time step Use CV model
-            self.predicted_trajectory = np.zeros((len(self.agents), Config.FORCES_N, 6))
+            self.predicted_trajectory = np.zeros((len(self.agents),1, Config.FORCES_N, 6))
             for ag_id, agent in enumerate(self.agents):
                 for t in range(Config.FORCES_N):
-                    self.predicted_trajectory[ag_id, t,:2] = agent.pos_global_frame + agent.vel_global_frame * Config.FORCES_DT
-                    self.predicted_trajectory[ag_id, t, 4:6] = agent.vel_global_frame
+                    self.predicted_trajectory[ag_id,0, t,:2] = agent.pos_global_frame + agent.vel_global_frame * Config.FORCES_DT
+                    self.predicted_trajectory[ag_id,0, t, 4:6] = agent.vel_global_frame
         indices = np.arange(len(self.agents))
         for id, agent in enumerate(self.agents):
             agent.policy.predicted_trajectory =  self.predicted_trajectory[indices != id]
@@ -332,36 +332,37 @@ class CollisionAvoidanceEnv(gym.Env):
                                ", ego_agent_dynamics=" + self.ego_agent_dynamics +", other_agents_dynamics=" + self.other_agents_dynamics
                                                    + ")")
         else:
-            seed = self.episode_number
-            if seed:
-                np.random.seed(seed)
-
-            if self.total_number_of_steps < 200000:
+            if self.total_number_of_steps < 100000:
                 # Supervised learning step
-                scenario_index = np.random.randint(0, len(self.scenario))
-                self.number_of_agents = 2  # Maximum no. of agents
+                scenario_index = np.random.randint(0,len(self.scenario))
+                self.number_of_agents = 6 # Maximum no. of agents
             # RL steps:
-            elif self.total_number_of_steps < 2e6:
-                scenario_index = np.random.randint(0, len(self.scenario))
+            elif self.total_number_of_steps < 1e6:
+                scenario_index = np.random.randint(0,len(self.scenario))
                 self.number_of_agents = 2
-            elif self.total_number_of_steps < 4e6:
-                scenario_index = np.random.randint(0, len(self.scenario))
-                self.number_of_agents = 4 #np.random.choice([2,4])
-            elif self.total_number_of_steps < 6e6:
-                scenario_index = np.random.randint(0, len(self.scenario))
-                self.number_of_agents = 6 #np.random.choice([2,4,6])
-            elif self.total_number_of_steps < 10e6:
-                scenario_index = np.random.randint(0, len(self.scenario))
-                self.number_of_agents = 8 #np.random.choice([2,4,6,8])
-            elif self.total_number_of_steps < 14e6:
-                scenario_index = np.random.randint(0, len(self.scenario))
-                self.number_of_agents = 10 #np.random.choice([2,4,6,8,10])
-            elif self.total_number_of_steps >= 14e6:
-                scenario_index = np.random.randint(0, len(self.scenario))
-                self.number_of_agents = 10 #np.random.choice([2,4,6,8,10])
+            elif self.total_number_of_steps < 2e6:
+                scenario_index = np.random.randint(0,len(self.scenario))
+                self.number_of_agents = 4
+            elif self.total_number_of_steps < 3e6:
+                scenario_index = np.random.randint(0,len(self.scenario))
+                self.number_of_agents = 6
+            elif self.total_number_of_steps < 5e6:
+                scenario_index = np.random.randint(0,len(self.scenario))
+                self.number_of_agents = 8
+            elif self.total_number_of_steps < 16e6:
+                scenario_index = np.random.randint(0,len(self.scenario))
+                self.number_of_agents = 10
+            elif self.total_number_of_steps >= 16e6:
+                scenario_index = np.random.randint(0,len(self.scenario))
+                self.number_of_agents = 10
 
+            #elif self.total_number_of_steps >= 7e6:
+            #    scenario_index = np.random.randint(2,len(self.scenario))
+            #    self.number_of_agents = 8
+            self.agents, self.obstacles = eval("tc." + self.scenario[scenario_index] + "(number_of_agents=" + str(self.number_of_agents) + ", seed=" + str(self.episode_number) + ", ego_agent_policy=" + self.ego_policy +
+                                               ", ego_agent_dynamics=" + self.ego_agent_dynamics + ", other_agents_dynamics=" + self.other_agents_dynamics + ", other_agents_policy=" + self.other_agents_policy + ")")
             #scenario_index = np.random.randint(0,len(self.scenario))
-            self.agents, self.obstacles = eval("tc."+self.scenario[scenario_index]+"(number_of_agents="+str(self.number_of_agents)+ ", seed="+str(self.episode_number)+", ego_agent_policy=" + self.ego_policy +
+            self.agents, self.obstacles = eval("tc."+self.scenario[scenario_index]+"(number_of_agents="+str(self.number_of_agents)+", ego_agent_policy=" + self.ego_policy +
                                ", ego_agent_dynamics=" + self.ego_agent_dynamics +", other_agents_dynamics=" + self.other_agents_dynamics +", other_agents_policy=" + self.other_agents_policy+ ")")
 
         if self.episode_number == 1:
