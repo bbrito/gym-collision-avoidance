@@ -153,6 +153,7 @@ class Map():
         return occupancy_grid
 
     def get_occupancy_grid2(self, obstacles):
+        # This function is not used!!!
 
         # fig = plt.figure()
         # plt.clf()

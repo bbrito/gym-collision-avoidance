@@ -91,6 +91,7 @@ class OccupancyGridSensor(Sensor):
         batch_grid = batch_grid.astype(bool)
 
         if self.plot:
+            self.plot_top_down_map2(top_down_map, ego_agent_pos_idx, agents)
             self.plot_top_down_map(top_down_map.map,ego_agent_pos_idx, start_idx_x, start_idx_y, ego_agent_heading, title='Original')
             self.plot_top_down_map(float_map, ego_agent_pos_idx, start_idx_x, start_idx_y, ego_agent_heading, title='Rotated')
             self.plot_batch_grid(batch_grid, ego_agent_heading)
@@ -98,11 +99,24 @@ class OccupancyGridSensor(Sensor):
         return batch_grid
 
     # Plot
+    def plot_top_down_map2 (self, top_down_map, ego_agent_idx, agents):
+        fig = plt.figure()
+        ax = fig.subplots(1)
+        ax.imshow(top_down_map.map, aspect='equal', cmap='Blues')
+        ax.scatter(ego_agent_idx[1], ego_agent_idx[0], s=100, c='red', marker='o')
+        for i in range(len(agents)):
+            if i != 0:
+                pos_idx, _ = top_down_map.world_coordinates_to_map_indices(agents[i].pos_global_frame)
+                ax.scatter(pos_idx[1],pos_idx[0], s= 100, c='blue', marker='o')
+        ax.set_axis_off()
+        plt.show()
+
     def plot_top_down_map(self, top_down_map, ego_agent_idx, start_idx_x, start_idx_y, heading, title):
         fig = plt.figure(title)
         ax = fig.subplots(1)
         ax.imshow(top_down_map, aspect='equal', cmap='Blues')
         ax.scatter(ego_agent_idx[1], ego_agent_idx[0], s=100, c='red', marker='o')
+
         rect = patches.Rectangle((start_idx_y, start_idx_x), self.x_width, self.y_width, linewidth=1, edgecolor='r', facecolor='none')
         ax.add_patch(rect)
         aanliggend = 20 * math.cos(heading)

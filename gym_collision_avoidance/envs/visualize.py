@@ -112,7 +112,8 @@ def plot_episode(agents, obstacles, in_evaluate_mode,
     plt.clf()
 
     ax = fig.add_subplot(1, 1, 1)
-    ax2 = plt.axes([0.8,0.2,0.2,0.2])
+    ax2 = fig.add_axes([0.8,0.2,0.2,0.2])
+    #ax2 = plt.axes([0.8,0.2,0.2,0.2])
 
     # if env_map is not None:
     #     ax.imshow(env_map.static_map, extent=[-env_map.x_width/2., env_map.x_width/2., -env_map.y_width/2., env_map.y_width/2.], cmap=plt.cm.binary)
@@ -251,17 +252,17 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, ax2, last_index=-1):
 
             t_final = agent.global_state_history[agent.step_num-1, 0]
             if circles_along_traj:
-                plt.plot(agent.global_state_history[:agent.step_num-1, 1],
+                ax.plot(agent.global_state_history[:agent.step_num-1, 1],
                          agent.global_state_history[:agent.step_num-1, 2],
                          color=plt_color, ls='-', linewidth=2)
                 # Plot goal position
-                plt.plot(agent.global_state_history[0, 3],
+                ax.plot(agent.global_state_history[0, 3],
                          agent.global_state_history[0, 4],
                          color=plt_color, marker='+', markersize=20)
                 if i == 0:
-                    plt.plot(agent.next_goal[0],
+                    ax.plot(agent.next_goal[0],
                              agent.next_goal[1],
-                             color=plt_colors[1], marker='*', markersize=20)
+                             color=plt_colors[7], marker='*', markersize=20)
 
                 # Display circle at agent pos every circle_spacing (nom 1.5 sec)
                 circle_spacing = 0.4
@@ -363,7 +364,7 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, ax2, last_index=-1):
                         ax2.arrow(0,0, 5, 0, width=0.5, head_width=1.5, head_length=1.5,
                                  fc='yellow')  # agent poiting direction
 
-
+                    '''
                     workspace_constr_a = np.array([[1,0],[0,1],[-1,0],[0,-1]])
                     workspace_constr_b = np.array([20,20,20,20])
 
@@ -373,7 +374,7 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, ax2, last_index=-1):
 
                     vertices = pypoman.polygon.compute_polygon_hull(workspace_constr_a, workspace_constr_b)
                     ax.add_patch(plt.Polygon(vertices, ec=plt_colors[9], fill=True,alpha=0.5))
-
+                    '''
 
                     ''''''
                 # Also display circle at agent position at end of trajectory

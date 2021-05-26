@@ -2623,7 +2623,7 @@ def train_stage_2(number_of_agents=10, ego_agent_policy=MPCPolicy,other_agents_p
         random.seed(seed)
         np.random.seed(seed)
 
-    n_agents = number_of_agents#random.randint(2, np.maximum(number_of_agents, 2))
+    n_agents = random.randint(2, np.maximum(number_of_agents, 2))
 
     min_obs = 2
     max_obs = 5
@@ -2650,7 +2650,7 @@ def train_stage_2(number_of_agents=10, ego_agent_policy=MPCPolicy,other_agents_p
             agents.append(Agent(positions_list[0][0], positions_list[0][1],
                                 positions_list[1][0], positions_list[1][1], radius, pref_speed,
                                 None, ego_agent_policy, ego_agent_dynamics,
-                                [OtherAgentsStatesSensor, LaserScanSensor], 0))
+                                [OtherAgentsStatesSensor, OccupancyGridSensor], 0))
         else:
             agents.append(Agent(positions_list[2 * ag_id][0], positions_list[2 * ag_id][1],
                                 positions_list[2 * ag_id + 1][0], positions_list[2 * ag_id + 1][1], radius, pref_speed,
@@ -3214,7 +3214,7 @@ def agent_with_crossing(number_of_agents=1, ego_agent_policy=MPCPolicy, other_ag
         random.seed(seed)
         np.random.seed(seed)
 
-    n_agents = number_of_agents#random.randint(2, np.maximum(number_of_agents, 2))
+    n_agents = random.randint(2, np.maximum(number_of_agents, 2))
 
     # Corridor scenario
     obstacle = []
@@ -3261,7 +3261,7 @@ def agent_with_crossing(number_of_agents=1, ego_agent_policy=MPCPolicy, other_ag
             agents.append(Agent(positions_list[0][0], positions_list[0][1],
                                 positions_list[1][0], positions_list[1][1], radius, pref_speed,
                                 None, ego_agent_policy, ego_agent_dynamics,
-                                [OtherAgentsStatesSensor, LaserScanSensor], 0))
+                                [OtherAgentsStatesSensor, OccupancyGridSensor], 0))
         else:
             agents.append(Agent(positions_list[2 * ag_id][0], positions_list[2 * ag_id][1],
                                 positions_list[2 * ag_id + 1][0], positions_list[2 * ag_id + 1][1], radius, pref_speed,
