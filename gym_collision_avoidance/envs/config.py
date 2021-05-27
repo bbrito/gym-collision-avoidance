@@ -42,7 +42,7 @@ class Config:
     COLLISION_DIST = 0.5 # meters between agents' boundaries for collision
     GETTING_CLOSE_RANGE = 0.2 # meters between agents' boundaries for collision
     JOINT_MPC_RL_TRAINING = False # select the action that has highets reward (mpc/rl)
-    CURRICULUM_LEARNING = True
+    CURRICULUM_LEARNING = False
     HOMOGENEOUS_TESTING = False
     PERFORMANCE_TEST = False
     PLOT_PREDICTIONS = True
@@ -57,7 +57,7 @@ class Config:
     NUM_PAST_ACTIONS_IN_STATE = 0
 
     NEAR_GOAL_THRESHOLD = 0.75
-    MAX_TIME_RATIO = 3.0 # agent has this number times the straight-line-time to reach its goal before "timing out"
+    MAX_TIME_RATIO = 4.0 # agent has this number times the straight-line-time to reach its goal before "timing out"
 
     SENSING_HORIZON  = np.inf
     #SENSING_HORIZON  = 3.0

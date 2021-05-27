@@ -240,7 +240,7 @@ class CollisionAvoidanceEnv(gym.Env):
         self.begin_episode = True
         self.episode_step_number = 0
         self._init_agents()
-        #self._init_prediction_model()
+        self._init_prediction_model()
         self._init_static_map()
 
         for state in Config.STATES_IN_OBS:
