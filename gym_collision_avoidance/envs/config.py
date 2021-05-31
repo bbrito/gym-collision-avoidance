@@ -84,7 +84,7 @@ class Config:
     MAP_WIDTH = 50 # Meters
     MAP_HEIGHT = 50 # Meters
 
-    SCENARIOS_FOR_TRAINING = ["agent_with_crossing","agent_with_corridor", "agent_with_door", "agent_with_crossing", "agent_with_hallway"]#["train_agents_swap_circle","train_agents_random_positions","train_agents_pairwise_swap"]
+    SCENARIOS_FOR_TRAINING = ["agent_with_corridor", "agent_with_door", "test_agent_with_obstacle", "train_stage_1"]#["train_agents_swap_circle","train_agents_random_positions","train_agents_pairwise_swap"]
 
     # Angular Map
     NUM_OF_SLICES = 16

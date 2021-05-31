@@ -42,6 +42,7 @@ from mpc_rl_collision_avoidance.policies.SecondOrderMPCPolicy import SecondOrder
 from mpc_rl_collision_avoidance.policies.MPCRLPolicy import MPCRLPolicy
 from mpc_rl_collision_avoidance.policies.LearningMPCPolicy import LearningMPCPolicy
 from mpc_rl_collision_avoidance.policies.OtherAgentMPCPolicy import OtherAgentMPCPolicy
+from timeit import default_timer as timer
 
 class CollisionAvoidanceEnv(gym.Env):
     metadata = {
@@ -132,7 +133,7 @@ class CollisionAvoidanceEnv(gym.Env):
 
         self.episode_step_number = 0
         self.episode_number = 0
-        self.total_number_of_steps = 0
+        self.total_number_of_steps = 1
 
         self.n_collisions = np.zeros([100])
         self.n_timeouts = np.zeros([100])
@@ -151,6 +152,9 @@ class CollisionAvoidanceEnv(gym.Env):
 
         self.prev_scenario_index = 0
         self.scenario_index = 0
+
+        self.avg_step_time = 0
+        self.avg_reset_time = 0
 
         gc.enable()
 
@@ -171,6 +175,7 @@ class CollisionAvoidanceEnv(gym.Env):
         # - game_over: boolean, true if every agent is done
         # - info_dict: metadata (more details) that help in training, for example
         ###############################
+        start = timer()
 
         if dt is None:
             dt = self.dt_nominal
@@ -224,7 +229,12 @@ class CollisionAvoidanceEnv(gym.Env):
         return next_observations, rewards, game_over, \
             {'which_agents_done': which_agents_done_dict}
 
+        end = timer()
+        self.avg_step_time = (end - start + self.total_number_of_steps*self.avg_step_time)/(self.total_number_of_steps+1)
+
     def reset(self):
+        start = timer()
+
         if (self.episode_number % Config.PLOT_EVERY_N_EPISODES == 1 or Config.EVALUATE_MODE) and Config.ANIMATE_EPISODES and self.episode_number >= 1 and self.episode_step_number > 10:
             plot_episode(self.agents, self.obstacles, Config.TRAIN_MODE, self.map, self.episode_number,
                          self.id, circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ,
@@ -254,6 +264,10 @@ class CollisionAvoidanceEnv(gym.Env):
         for state in Config.STATES_IN_OBS:
             for agent in range(Config.MAX_NUM_AGENTS_IN_ENVIRONMENT):
                 self.observation[agent][state] = np.zeros((Config.STATE_INFO_DICT[state]['size']), dtype=Config.STATE_INFO_DICT[state]['dtype'])
+
+        end = timer()
+
+        self.avg_reset_time = (end - start + self.total_number_of_steps*self.avg_reset_time)/(self.total_number_of_steps+1)
 
         return self._get_obs()
 
@@ -335,7 +349,7 @@ class CollisionAvoidanceEnv(gym.Env):
         else:
             if self.total_number_of_steps < 100000:
                 # Supervised learning step
-                self.number_of_agents = 6 # Maximum no. of agents
+                number_of_agents = 6 # Maximum no. of agents
             # RL steps:
             elif self.total_number_of_steps < 1e6:
                 number_of_agents = 2
@@ -356,7 +370,7 @@ class CollisionAvoidanceEnv(gym.Env):
             self.prev_episode_agents = copy.deepcopy(self.agents)
 
         self.scenario_index, self.number_of_agents = self.get_new_scenario()
-
+        print(self.scenario[self.scenario_index] + "(number_of_agents=" + str(self.number_of_agents))
         if self.evaluate:
             self.prev_scenario_index = self.scenario_index
             self.scenario_index = np.random.randint(0, len(self.scenario))
@@ -369,13 +383,11 @@ class CollisionAvoidanceEnv(gym.Env):
                                ", ego_agent_dynamics=" + self.ego_agent_dynamics +", other_agents_dynamics=" + self.other_agents_dynamics
                                                    + ")")
         else:
-            self.agents, self.obstacles = eval("tc." + self.scenario[self.scenario_index] + "(number_of_agents=" + str(self.number_of_agents) + ", seed=" + str(self.episode_number) + ", ego_agent_policy=" + self.ego_policy +
+            self.agents, self.obstacles = eval("tc." + self.scenario[self.scenario_index] + "(number_of_agents=" + str(self.number_of_agents) + ", ego_agent_policy=" + self.ego_policy +
                                                ", ego_agent_dynamics=" + self.ego_agent_dynamics + ", other_agents_dynamics=" + self.other_agents_dynamics + ", other_agents_policy=" + self.other_agents_policy + ")")
 
-            self.agents, self.obstacles = eval("tc."+self.scenario[self.scenario_index]+"(number_of_agents="+str(self.number_of_agents)+", ego_agent_policy=" + self.ego_policy +
-                               ", ego_agent_dynamics=" + self.ego_agent_dynamics +", other_agents_dynamics=" + self.other_agents_dynamics +", other_agents_policy=" + self.other_agents_policy+ ")")
-
         # TODO: This is used to avoid loading the network parameters over and over for this specific model which takes a lot of time
+        print("2")
         if self.episode_number == 1:
             self.policies=[]
             ga3c_params = {
