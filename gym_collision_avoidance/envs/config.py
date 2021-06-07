@@ -42,7 +42,7 @@ class Config:
     COLLISION_DIST = 0.5 # meters between agents' boundaries for collision
     GETTING_CLOSE_RANGE = 0.2 # meters between agents' boundaries for collision
     JOINT_MPC_RL_TRAINING = False # select the action that has highets reward (mpc/rl)
-    CURRICULUM_LEARNING = True
+    CURRICULUM_LEARNING = False
     HOMOGENEOUS_TESTING = False
     PERFORMANCE_TEST = False
     PLOT_PREDICTIONS = True
@@ -81,17 +81,17 @@ class Config:
     SUBMAP_RESOLUTION = 0.1 # Pixel / meter
 
     # STATIC MAP
-    MAP_WIDTH = 50 # Meters
-    MAP_HEIGHT = 50 # Meters
+    MAP_WIDTH = 30 # Meters
+    MAP_HEIGHT = 30 # Meters
 
-    SCENARIOS_FOR_TRAINING = ["test_agent_with_obstacle", "agent_with_corridor", "agent_with_door"] #"agent_with_corridor", "agent_with_door", "agent_with_crossing", "agent_with_hallway"]#["train_agents_swap_circle","train_agents_random_positions","train_agents_pairwise_swap"]
+    SCENARIOS_FOR_TRAINING = ["train_agents_swap_circle_ewc","train_agents_random_positions","train_agents_pairwise_swap"] #"agent_with_corridor", "agent_with_door", "agent_with_crossing", "agent_with_hallway"]#["train_agents_swap_circle","train_agents_random_positions","train_agents_pairwise_swap"]
 
     # Angular Map
     NUM_OF_SLICES = 16
     MAX_RANGE = 6
 
-    #STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states']
-    STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states', 'local_grid'] #occupancy grid
+    STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states']
+    #STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states', 'local_grid'] #occupancy grid
     #STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states', 'laserscan'] #angular map
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states', 'use_ppo', 'laserscan']
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states', 'use_ppo'] # 2-agent net
