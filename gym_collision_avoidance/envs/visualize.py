@@ -154,6 +154,14 @@ def plot_episode(agents, obstacles, in_evaluate_mode,
             label_exists = label_exists or (legend.get_label() in  str(type(agent.policy)))
         if not label_exists:
             legend_elements.append(leg)
+
+        if hasattr(agent.policy, 'waypoints'):
+            #plt.plot(*agent.policy.spline.SampleXY(500))
+            pol = agent.policy
+            for i in range(len(pol.ss_) - 1):
+                xs = np.arange(agent.policy.ss_[i], agent.policy.ss_[i+ 1], 0.1)
+                plt.plot(agent.policy.cubic_x_(xs), agent.policy.cubic_y_(xs), linestyle='--')
+
     """
     legend_elements = [Line2D([0], [0], marker='o', color='w', label='GO-MPC',
                               markerfacecolor=plt_colors[7], markersize=15),

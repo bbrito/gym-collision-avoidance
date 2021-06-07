@@ -2955,9 +2955,9 @@ def agent_with_corridor_with_obstacle(number_of_agents=5, ego_agent_policy=MPCPo
     goal_positions_list = []
 
     sign = random.choice((-1,1))
-    x0_agent_1 = sign*np.random.uniform(7.0, 12.0)
+    x0_agent_1 = 10#sign*np.random.uniform(7.0, 12.0)
     y0_agent_1 = np.random.uniform(-4, 4)
-    goal_x_1 = -x0_agent_1
+    goal_x_1 = -10#-x0_agent_1
     goal_y_1 = y0_agent_1
     if sign ==1:
         ini_positions_list.append(np.array([x0_agent_1, y0_agent_1]))
@@ -3009,6 +3009,7 @@ def agent_with_corridor_with_obstacle(number_of_agents=5, ego_agent_policy=MPCPo
 
 
         agents[ag_id].end_condition = ec._corridor_check_if_at_goal
+#[0, 0]
 
     agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
@@ -3016,6 +3017,7 @@ def agent_with_corridor_with_obstacle(number_of_agents=5, ego_agent_policy=MPCPo
     return agents, obstacle
 
 def single_agent_in_a_corridor_with_obstacle(number_of_agents=5, ego_agent_policy=MPCPolicy, other_agents_policy=RVOPolicy, ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None):
+
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
     agents = []
@@ -3025,32 +3027,46 @@ def single_agent_in_a_corridor_with_obstacle(number_of_agents=5, ego_agent_polic
 
     # Corridor scenario
     obstacle = []
-    #obstacle_1 = [(20,8), (-20, 8), (-20, 5), (20, 5)]
-    #obstacle_2 = [(20, -5), (-20, -5), (-20, -8), (20, -8)]
-    #obstacle.extend([obstacle_1, obstacle_2])
+    height = 8.0
+    height /= 2.0
+    height_wall = 3.0
+    height_wall += height
+    obstacle_1 = [(20,height_wall), (-20, height_wall), (-20, height), (20, height)]
+    obstacle_2 = [(20, -height), (-20, -height), (-20, -height_wall), (20, -height_wall)]
+    obstacle.extend([obstacle_1, obstacle_2])
 
-    # Size of square
-    size_square = np.random.uniform(2, 4)
-    # Upper x,y value square
-    x_v_up = np.random.uniform(-2,2)
-    y_v_up = np.random.uniform(-2,2)
-    # Lower x,y value of square
-    x_v_low = x_v_up - np.random.uniform(2, 4)
-    y_v_low = y_v_up - np.random.uniform(2, 4)
-    obstacle_corners = [(x_v_up, y_v_up), (x_v_low, y_v_up), (x_v_low, y_v_low), (x_v_up, y_v_low)]
-    obstacle.append(obstacle_corners)
+    mid_obstacle = True
+    if mid_obstacle:
+        # Size of square
+        size_square = np.random.uniform(2, 4)
+        # Upper x,y value square
+        x_v_up = np.random.uniform(-1, 1)
+        y_v_up = 1 #np.random.uniform(-1, 1)
+        # Lower x,y value of square
+        x_v_low = x_v_up - 2# - np.random.uniform(2, 6)
+        y_v_low = y_v_up - 2#- np.random.uniform(1.0, 2.0)
+        obstacle_corners = [(x_v_up, y_v_up), (x_v_low, y_v_up), (x_v_low, y_v_low), (x_v_up, y_v_low)]
+        obstacle.append(obstacle_corners)
 
     ini_positions_list = []
     goal_positions_list = []
 
-    sign = random.choice((-1,1))
-    x0_agent_1 = random.choice((-1,1))*np.random.uniform(-6.0, 6.0)
-    y0_agent_1 = random.choice((-1,1))*np.random.uniform(-6, 6)
-    goal_x_1 = -x0_agent_1
-    goal_y_1 = -y0_agent_1
+    # Scenario with constant x, but varying y locations
+    x0_agent_1 = 10#random.choice((-1,1))*np.random.uniform(-14, -8.0)
+    y0_agent_1 = random.choice((-1,1))*np.random.uniform(-height + 1, height - 1)
+    # x0_agent_1 = random.choice((-1, 1)) * np.random.uniform(-6.0, 6.0)
+    # y0_agent_1 = random.choice((-1, 1)) * np.random.uniform(-6, 6)
+    goal_x_1 = -10#-x0_agent_1 #random.choice((-1, 1)) * np.random.uniform(10.0, 18.0)
+    goal_y_1 = -y0_agent_1 #random.choice((-1,1))*np.random.uniform(-5, 5)
     ini_positions_list.append(np.array([x0_agent_1, y0_agent_1]))
     goal_positions_list.append(np.array([goal_x_1, goal_y_1]))
-
+    # x0_agent_2 = random.choice((-1, 1)) * np.random.uniform(10.0, 18.0)
+    # y0_agent_2 = random.choice((-1, 1)) * np.random.uniform(-5, 5)
+    # print(x0_agent_2, y0_agent_2)
+    # goal_x_2 = -x0_agent_2 #random.choice((-1, 1)) * np.random.uniform(-18.0, -10.0)
+    # goal_y_2 = -y0_agent_2 #random.choice((-1,1))*np.random.uniform(-5, 5)
+    # ini_positions_list_2.append(np.array([x0_agent_2, y0_agent_2]))
+    # goal_positions_list_2.append(np.array([goal_x_2, goal_y_2]))
     agents.append(Agent(ini_positions_list[0][0], ini_positions_list[0][1],
                        goal_positions_list[0][0], goal_positions_list[0][1], radius, pref_speed,
                        None, ego_agent_policy, ego_agent_dynamics,
@@ -3058,11 +3074,21 @@ def single_agent_in_a_corridor_with_obstacle(number_of_agents=5, ego_agent_polic
 
     # Addin other RVO Agent
     agents.append(Agent(goal_positions_list[0][0], goal_positions_list[0][1],
-                       ini_positions_list[0][0], ini_positions_list[0][1], radius, pref_speed,
-                       None, other_agents_policy, ego_agent_dynamics,
-                       [OtherAgentsStatesSensor], 0))
+                        ini_positions_list[0][0], ini_positions_list[0][1], radius, pref_speed,
+                        None, other_agents_policy, ego_agent_dynamics,
+                        [OtherAgentsStatesSensor], 1))
 
     agents[0].end_condition = ec._corridor_check_if_at_goal
+
+    # Pick a random point to plan the spline through, either above or below the obstacle
+    obstacle_waypoint = np.random.uniform(-1, 1)
+    if obstacle_waypoint > 0:
+        obstacle_waypoint += 2.5
+    else:
+        obstacle_waypoint -= 2.5
+    waypoints = np.array([[x0_agent_1, y0_agent_1], [0, obstacle_waypoint], [goal_x_1, goal_y_1]])
+    angles = np.array([np.pi, np.pi, np.pi])
+    agents[0].policy.set_waypoints(waypoints, angles)
 
     try:
         agents[0].policy.static_obstacles_manager.obstacle = obstacle

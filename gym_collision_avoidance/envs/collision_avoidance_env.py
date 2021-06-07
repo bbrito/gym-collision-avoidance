@@ -40,7 +40,7 @@ from mpc_rl_collision_avoidance.policies.SimpleNNPolicy import SimpleNNPolicy
 
 from mpc_rl_collision_avoidance.policies.SafeMPCPolicy import SafeMPCPolicy
 from mpc_rl_collision_avoidance.policies.SafeMPCRLNNPolicy import SafeMPCRLNNPolicy
-
+from mpc_rl_collision_avoidance.policies.GaussianMPCPolicy import GaussianMPCPolicy
 
 from mpc_rl_collision_avoidance.policies.SociallyGuidedMPCPolicy import SociallyGuidedMPCPolicy
 from mpc_rl_collision_avoidance.policies.FirstOrderMPCPolicy import FirstOrderMPCPolicy
@@ -301,7 +301,8 @@ class CollisionAvoidanceEnv(gym.Env):
 
 
     def update_top_down_map(self):
-        print("Not adding agents to map")
+        pass
+        # print("Not adding agents to map")
         #self.map.add_agents_to_map(self.agents)
         #plt.imshow(self.map.map)
         #plt.pause(0.1)
@@ -377,15 +378,19 @@ class CollisionAvoidanceEnv(gym.Env):
             }
             for ag in self.agents:
                 if "GA3C" in str(ag.policy):
+                    # obstacles = ag.policy.static_obstacles_manager.obstacle
                     self.policies.append(eval(str(ag.policy)+"()"))
                     self.policies[-1].initialize_network(**ga3c_params)
+                    self.policies[-1].static_obstacles_manager.obstacle = self.obstacles
                     ag.policy = self.policies[-1]
         else:
             i = 0
             for ag in self.agents:
                 if "GA3C" in str(ag.policy):
                     ag.policy = self.policies[i]
+                    ag.policy.static_obstacles_manager.obstacle = self.obstacles
                     i += 1
+        print(self.obstacles)
 
         if self.prediction_model:
             self.prediction_model.reset_states(len(self.agents))
