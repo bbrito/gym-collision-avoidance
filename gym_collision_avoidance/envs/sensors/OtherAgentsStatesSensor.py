@@ -70,5 +70,5 @@ class OtherAgentsStatesSensor(Sensor):
             other_agent_count += 1
         
         host_agent.num_other_agents_observed = other_agent_count
-
+        other_agents_states = np.zeros((Config.MAX_NUM_OTHER_AGENTS_IN_ENVIRONMENT, 9))
         return other_agents_states

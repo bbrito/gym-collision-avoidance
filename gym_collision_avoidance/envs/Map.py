@@ -8,12 +8,12 @@ import time
 import cv2
 
 class Map():
-    def __init__(self, x_width, y_width, grid_cell_size, map_filename=None):
+    def __init__(self, x_width, y_width, grid_cell_size,rotation_angle = None, map_filename=None):
         # Set desired map parameters (regardless of actual image file dims)
         self.x_width = x_width
         self.y_width = y_width
         self.grid_cell_size = grid_cell_size
-
+        self.angle = rotation_angle
         # Load the image file corresponding to the static map, and resize according to desired specs
         self.dims = (int(self.x_width/self.grid_cell_size),int(self.y_width/self.grid_cell_size))
         self.origin_coords = np.array([(self.x_width / 2.) / self.grid_cell_size, (self.y_width / 2.) / self.grid_cell_size])
@@ -116,8 +116,19 @@ class Map():
         #Initialize variables
         occupancy_grid = np.zeros(shape=self.dims) #dimension (300,300), dtype float64
 
+        if self.angle is not None:
+            theta = -self.angle
+            obstacle = []
+            obstacle_1 = obstacles[0]
+            obstacle_2 = obstacles[1]
+            obstacle_1 = [self.rotate_obs(obstacle_1[i][0], obstacle_1[i][1], theta) for i in range(len(obstacle_1))]
+            obstacle_2 = [self.rotate_obs(obstacle_2[i][0], obstacle_2[i][1], theta) for i in range(len(obstacle_2))]
+            obstacle.extend([obstacle_1, obstacle_2])
+        else:
+            obstacle = obstacles
+
         # For every obstacle, change grid value to 1
-        for obs in obstacles:
+        for obs in obstacle:
             # Initialize variables
             start_idx, _ = self.world_coordinates_to_map_indices(obs[1])
             end_idx, _ = self.world_coordinates_to_map_indices(obs[3])
@@ -126,6 +137,9 @@ class Map():
                 for jj in range(start_idx[1],(end_idx[1]+1),1):
                     occupancy_grid[ii, jj] = 1
 
+        if self.angle is not None:
+            occupancy_grid = self.rotate_grid_around_center(occupancy_grid, [self.dims[0] / 2, self.dims[1] / 2],
+                                                            angle=self.angle * 180 / np.pi)
             '''
             This can maybe be used if the obstacles are not square/rectangle or if they are crocket. 
             # Initialize variables
@@ -151,6 +165,26 @@ class Map():
                     occupancy_grid[ii, jj] = 1'''
 
         return occupancy_grid
+
+    def rotate_grid_around_center(self, grid, agent_pos, angle):
+        """
+        inputs:
+          grid: numpy array (gridmap) that needs to be rotated
+          angle: rotation angle in degrees
+        """
+        # Rotate grid into direction of initial heading
+        grid = grid.copy()
+        rows, cols = grid.shape
+        M = cv2.getRotationMatrix2D(center=(agent_pos[1], agent_pos[0]), angle=angle, scale=1)
+        grid = cv2.warpAffine(grid, M, (rows, cols))
+
+        return grid
+
+    def rotate_obs(self, x, y, theta):
+        x_new = x * np.cos(theta) - y * np.sin(theta)
+        y_new = x * np.sin(theta) + y * np.cos(theta)
+        return x_new, y_new
+
 
     def get_occupancy_grid2(self, obstacles):
         # This function is not used!!!
