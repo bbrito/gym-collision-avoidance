@@ -64,7 +64,6 @@ class CollisionAvoidanceEnv(gym.Env):
         self.dt_nominal = Config.DT
 
         # Collision Parameters
-        self.collision_dist = Config.COLLISION_DIST
         self.getting_close_range = Config.GETTING_CLOSE_RANGE
 
         # Plotting Parameters
@@ -87,7 +86,7 @@ class CollisionAvoidanceEnv(gym.Env):
         self.ego_agent_dynamics = "UnicycleSecondOrderEulerDynamics"
 
         self.other_agents_policy = "RVOPolicy"
-        self.other_agents_dynamics = "UnicycleDynamics"
+        self.other_agents_dynamics = "UnicycleDynamicsMaxAcc"
 
         self.max_heading_change = 4
         self.min_heading_change = -4
@@ -105,15 +104,6 @@ class CollisionAvoidanceEnv(gym.Env):
             self.high_action = np.array([self.max_speed,
                                          self.max_heading_change])
             self.action_space = gym.spaces.Box(self.low_action, self.high_action, dtype=np.float32)
-        
-
-        # original observation space
-        # self.observation_space = gym.spaces.Box(self.low_state, self.high_state, dtype=np.float32)
-        
-        # not used...
-        # self.observation_space = np.array([gym.spaces.Box(self.low_state, self.high_state, dtype=np.float32)
-                                           # for _ in range(self.num_agents)])
-        # observation_space = gym.spaces.Box(self.low_state, self.high_state, dtype=np.float32)
         
         # single agent dict obs
         self.observation = {}
@@ -281,15 +271,8 @@ class CollisionAvoidanceEnv(gym.Env):
 
     def _prediction_step(self):
         # TODO: move initial CV predictions to predictiton model class
-        if self.episode_number >= 100:
-            self.predicted_trajectory = self.prediction_model.query(self.agents)[0]
-        else:
-            # For the first time step Use CV model
-            self.predicted_trajectory = np.zeros((len(self.agents),1, Config.FORCES_N, 6))
-            for ag_id, agent in enumerate(self.agents):
-                for t in range(Config.FORCES_N):
-                    self.predicted_trajectory[ag_id,0, t,:2] = agent.pos_global_frame + agent.vel_global_frame * Config.FORCES_DT
-                    self.predicted_trajectory[ag_id,0, t, 4:6] = agent.vel_global_frame
+        self.predicted_trajectory = self.prediction_model.query(self.agents)[0]
+
         indices = np.arange(len(self.agents))
         for id, agent in enumerate(self.agents):
             agent.policy.predicted_trajectory =  self.predicted_trajectory[indices != id]
@@ -368,15 +351,23 @@ class CollisionAvoidanceEnv(gym.Env):
             if self.total_number_of_steps < 100000:
                 # Supervised learning step
                 number_of_agents = 6 # Maximum no. of agents
+                number_of_agents = random.randint(2, np.maximum(6, 2))
             # RL steps:
             elif self.total_number_of_steps < 1e6:
-                number_of_agents = 2
-            elif self.total_number_of_steps < 2e6:
                 number_of_agents = 4
+                number_of_agents = random.randint(2, np.maximum(4, 2))
+            elif self.total_number_of_steps < 2e6:
+                number_of_agents = 6
+                number_of_agents = random.randint(2, np.maximum(6, 2))
             elif self.total_number_of_steps < 4e6:
-                number_of_agents = 6
+                number_of_agents = 8
+                number_of_agents = random.randint(2, np.maximum(8, 2))
             elif self.total_number_of_steps >= 4e6:
-                number_of_agents = 6
+                number_of_agents = 10
+                number_of_agents = random.randint(2, np.maximum(10, 2))
+
+        #self.scenario_index, self.number_of_agents = scenario_index, number_of_agents
+
         return scenario_index, number_of_agents
 
     def _init_agents(self):
@@ -384,6 +375,7 @@ class CollisionAvoidanceEnv(gym.Env):
             self.prev_episode_agents = copy.deepcopy(self.agents)
 
         self.scenario_index, self.number_of_agents = self.get_new_scenario()
+
         print(self.scenario[self.scenario_index] + "(number_of_agents=" + str(self.number_of_agents))
         if self.evaluate:
             self.prev_scenario_index = self.scenario_index
@@ -401,7 +393,7 @@ class CollisionAvoidanceEnv(gym.Env):
                                                ", ego_agent_dynamics=" + self.ego_agent_dynamics + ", other_agents_dynamics=" + self.other_agents_dynamics + ", other_agents_policy=" + self.other_agents_policy + ")")
 
         # TODO: This is used to avoid loading the network parameters over and over for this specific model which takes a lot of time
-        print("2")
+
         if self.episode_number == 1:
             self.policies=[]
             ga3c_params = {
@@ -488,12 +480,16 @@ class CollisionAvoidanceEnv(gym.Env):
                     if collision_with_agent[i]:
                         rewards[i] = self.reward_collision_with_agent
                         agent.in_collision = True
+                        agent.other_agent_collision = True
+                        agent.wall_collision = False
                         print("Agent %i: Collision with another agent!"
                                % agent.id)
                     #collision with a static obstacle
                     elif collision_with_wall[i]:
                         rewards[i] = self.reward_collision_with_wall
                         agent.in_collision = True
+                        agent.wall_collision = True
+                        agent.other_agent_collision = False
                         # print("Agent %i: Collision with wall!"
                               # % agent.id)
                     # There was no collision
@@ -522,6 +518,18 @@ class CollisionAvoidanceEnv(gym.Env):
                 # if gets close to goal
                 rewards[i] += Config.REWARD_DISTANCE_TO_GOAL * (agent.past_dist_to_goal - agent.dist_to_goal)
 
+                # If subgoal position in inside an obstacle
+                """
+                if i == 0:
+                    [pi, pj], in_map = self.map.world_coordinates_to_map_indices(agent.policy.goal_)
+                    mask = self.map.get_agent_map_indices([pi, pj], agent.radius)
+                    if in_map and np.any(self.map.static_map[mask]):
+                        print("Subgoal Inside Wall!")
+                        rewards[i] += -0.1
+                    elif not in_map:
+                        print("Subgoal Inside Wall!")
+                        rewards[i] += -0.1
+                """
         rewards = np.clip(rewards, self.min_possible_reward,
                           self.max_possible_reward)/(self.max_possible_reward - self.min_possible_reward)
         if Config.TRAIN_SINGLE_AGENT:
@@ -567,8 +575,7 @@ class CollisionAvoidanceEnv(gym.Env):
                     elif collision_with_wall[i]:
                         rewards = self.reward_collision_with_wall
                         agent.in_collision = True
-                        # print("Agent %i: Collision with wall!"
-                              # % agent.id)
+                        print("Agent %i: Collision with wall!" % agent.id)
                     # There was no collision
                     else:
                         # Penalty for getting close to agents
@@ -582,8 +589,18 @@ class CollisionAvoidanceEnv(gym.Env):
                             rewards += self.reward_wiggly_behavior
                         # elif entered_norm_zone[i]:
                         #     rewards[i] = self.reward_entered_norm_zone
+
+            # If subgoal position in inside an obstacle
+            [pi, pj], in_map = self.map.world_coordinates_to_map_indices(agent[ego_agent].policy.goal_)
+            mask = self.map.get_agent_map_indices([pi, pj], agent.radius)
+            if np.any(self.map.static_map[mask]):
+                print("Subgoal Inside Wall!")
+                rewards += -1
+
             # if gets close to goal
             rewards -= Config.REWARD_DISTANCE_TO_GOAL * np.linalg.norm(ego_agent.goal_global_frame - ego_agent.pos_global_frame - action[0])
+
+            # TODO: ADD PENALTY IF SUBGOAL IS INSIDE STATIC OBSTACLE
 
         rewards = np.clip(rewards, self.min_possible_reward,
                           self.max_possible_reward)/(self.max_possible_reward - self.min_possible_reward)

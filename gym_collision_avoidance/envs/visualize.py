@@ -207,6 +207,13 @@ def plot_episode(agents, obstacles, in_evaluate_mode,
         plt.savefig(filename)
 
         if agents[0].in_collision:
+            if agents[0].wall_collision:
+                fig_name = base_fig_name.format(
+                    policy=plot_policy_name+"_wall_coll",
+                    num_agents=len(agents),
+                    test_case=str(test_case_index).zfill(3),
+                    step="",
+                    extension='png')
             plt.savefig(collision_plot_dir + fig_name)
 
         if agents[0].ran_out_of_time:
@@ -376,14 +383,17 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, ax2, last_index=-1):
 
 
                     workspace_constr_a = np.array([[1,0],[0,1],[-1,0],[0,-1]])
-                    workspace_constr_b = np.array([20,20,20,20])
+                    workspace_constr_b = np.array([10,10,10,10])
 
                     for constr in agent.policy.linear_constraints:
-                        workspace_constr_a = np.concatenate((workspace_constr_a,np.expand_dims(constr[0],axis=0)))
-                        workspace_constr_b = np.concatenate((workspace_constr_b,np.array([constr[1]])))
+                        workspace_constr_a = np.concatenate((workspace_constr_a,np.expand_dims(constr[0:2],axis=0)))
+                        workspace_constr_b = np.concatenate((workspace_constr_b,np.array([constr[2]])))
 
-                    vertices = pypoman.polygon.compute_polygon_hull(workspace_constr_a, workspace_constr_b)
-                    ax.add_patch(plt.Polygon(vertices, ec=plt_colors[9], fill=True,alpha=0.5))
+                    try:
+                        vertices = pypoman.polygon.compute_polygon_hull(workspace_constr_a, workspace_constr_b)
+                        ax.add_patch(plt.Polygon(vertices, ec=plt_colors[9], fill=True,alpha=0.5))
+                    except:
+                        print("Something went wrong drawing the polygon")
 
 
                     ''''''

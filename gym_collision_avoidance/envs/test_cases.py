@@ -2947,67 +2947,69 @@ def only_two_agents_with_obstacle(number_of_agents=4, ego_agent_policy=RVOPolicy
 
 def agent_with_corridor(number_of_agents=4, ego_agent_policy=RVOPolicy,other_agents_policy=RVOPolicy, ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None):
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
-    radius = 0.5# np.random.uniform(0.5, 0.5)
+    radius = 0.4# np.random.uniform(0.5, 0.5)
     agents = []
     if seed:
         random.seed(seed)
         np.random.seed(seed)
 
     n_agents = random.randint(2, np.maximum(number_of_agents, 2))
+    #n_agents = number_of_agents
 
     # Corridor scenario
     obstacle = []
     rotation_angle = np.random.uniform(-np.pi,np.pi)
-    obstacle_1 = [(15, 3.5), (-15, 3.5), (-15, 2.3), (15, 2.3)]
-    obstacle_2 = [(15, -2.3), (-15, -2.3), (-15, -3.5), (15, -3.5)]
-    # obstacle_3 = [(11, 4.5), (10, 4.5), (10, -4.5), (11, -4.5)]
-    # obstacle_4 = [(-10, 4.5), (-11, 4.5), (-11, -4.5), (-10, -4.5)]
-    # obstacle_1 = [rotate_obs(obstacle_1[i][0], obstacle_1[i][1], rotation_angle) for i in range(len(obstacle_1))]
-    # obstacle_2 = [rotate_obs(obstacle_2[i][0], obstacle_2[i][1], rotation_angle) for i in range(len(obstacle_2))]
+    obstacle_1 = [(10, 6), (-10, 6), (-10, 2.3), (10, 2.3)]
+    obstacle_2 = [(10, -2.3), (-10, -2.3), (-10, -6), (10, -6)]
+
     obstacle.extend([obstacle_1, obstacle_2])
 
     ini_positions_list = []
     goal_positions_list = []
 
-    sign = random.choice((-1,1))
-    x0_agent_1 = sign*np.random.uniform(4.0, 13.0)
-    y0_agent_1 = np.random.uniform(-1.8, 1.8)
-    goal_x_1 = -x0_agent_1
-    goal_y_1 = y0_agent_1*random.choice((-1,1))
+    # Select random initial position in different sides of the corridor for the ego-robot
+    x0_agent_1 = np.random.uniform(-8.0, 8.0)
+    y0_agent_1 = np.random.uniform(-2.0, 2.0)
+    goal_x_1 = np.random.uniform(-10.0, 10.0)
+    goal_y_1 = np.random.uniform(-2.0, 2.0)
 
     # x0_agent_1, y0_agent_1 = rotate_obs(x0_agent_1, y0_agent_1, rotation_angle)
     # goal_x_1, goal_y_1 = rotate_obs(goal_x_1, goal_y_1, rotation_angle)
 
-    goal_positions_list.append(np.array([goal_x_1, goal_y_1]))
-    ini_positions_list.append(np.array([x0_agent_1, y0_agent_1]))
+    # Search for a initial and goal position within a minimum distance
+    goal = np.array([goal_x_1, goal_y_1])
+    initial = np.array([x0_agent_1, y0_agent_1])
+    while np.linalg.norm(goal - initial) < 5.0:
+        x0_agent_1 = np.random.uniform(-8.0, 8.0)
+        y0_agent_1 = np.random.uniform(-2.0, 2.0)
+        goal_x_1 = np.random.uniform(-8.0, 8.0)
+        goal_y_1 = np.random.uniform(-2.0, 2.0)
+        goal = np.array([goal_x_1, goal_y_1])
+        initial = np.array([x0_agent_1, y0_agent_1])
 
+    goal_positions_list.append(goal)
+    ini_positions_list.append(initial)
+
+    # Get initial and goal positions for other agents
     for ag_id in range(n_agents):
         in_pose_valid_ = False
         while not in_pose_valid_:
-            sign = random.choice((-1, 1))
-            x0_agent_1 = sign * np.random.uniform(4.0, 13.0)
-            y0_agent_1 = np.random.uniform(-1.8, 1.8)
-            goal_x_1 = -x0_agent_1
-            goal_y_1 = y0_agent_1 * random.choice((-1,1))
+            x0_agent_1 = np.random.uniform(-10.0, 10.0)
+            y0_agent_1 = np.random.uniform(-2.0, 2.0)
+            goal_x_1 = np.random.uniform(-10.0, 10.0)
+            goal_y_1 = np.random.uniform(-2.0, 2.0)
 
             # x0_agent_1, y0_agent_1 = rotate_obs(x0_agent_1, y0_agent_1, rotation_angle)
             # goal_x_1, goal_y_1 = rotate_obs(goal_x_1, goal_y_1, rotation_angle)
 
             goal = np.array([goal_x_1, goal_y_1])
             initial_pose = np.array([x0_agent_1, y0_agent_1])
-            if sign == 1:
-                in_pose_valid_ = is_pose_valid(goal, goal_positions_list) and is_pose_valid(initial_pose,
-                                                                                            ini_positions_list)
-            else:
-                in_pose_valid_ = is_pose_valid(goal, ini_positions_list) and is_pose_valid(initial_pose,
-                                                                                           goal_positions_list)
+            in_pose_valid_ = is_pose_valid(goal, goal_positions_list) and is_pose_valid(initial_pose,ini_positions_list)
+
         ini_positions_list.append(np.array([x0_agent_1, y0_agent_1]))
         goal_positions_list.append(np.array([goal_x_1, goal_y_1]))
 
-
-    #random.shuffle(ini_positions_list)
-    #random.shuffle(goal_positions_list)
-
+    # Create agents class
     for ag_id in range(n_agents):
         if np.random.uniform(0,1)>0.8:
            other_agents_policy = NonCooperativePolicy
@@ -3023,19 +3025,6 @@ def agent_with_corridor(number_of_agents=4, ego_agent_policy=RVOPolicy,other_age
                                 goal_positions_list[ag_id][0], goal_positions_list[ag_id][1], radius, pref_speed,
                                 None, other_agents_policy, other_agents_dynamics,
                                 [OtherAgentsStatesSensor], ag_id))
-
-        # #policy = random.choice([other_agents_policy, NonCooperativePolicy])
-        # cooperation_coef_ = np.random.uniform(0.1,1.0)
-        # if np.random.uniform(0,1)>0.8:
-        #    other_agents_policy = NonCooperativePolicy
-        # else:
-        #    other_agents_policy = RVOPolicy
-        # agents.append(Agent(goal_positions_list[ag_id][0], goal_positions_list[ag_id][1],
-        #                     ini_positions_list[ag_id][0], ini_positions_list[ag_id][1], radius, pref_speed,
-        #                     None, other_agents_policy, other_agents_dynamics,
-        #                     [OtherAgentsStatesSensor], 2 * ag_id + 1, cooperation_coef_))
-        #
-        # agents[ag_id].end_condition = ec._corridor_check_if_at_goal
 
     agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
