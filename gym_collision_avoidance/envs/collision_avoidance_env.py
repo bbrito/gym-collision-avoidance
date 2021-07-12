@@ -519,7 +519,7 @@ class CollisionAvoidanceEnv(gym.Env):
                 rewards[i] += Config.REWARD_DISTANCE_TO_GOAL * (agent.past_dist_to_goal - agent.dist_to_goal)
 
                 # If subgoal position in inside an obstacle
-                """
+                """ """
                 if i == 0:
                     [pi, pj], in_map = self.map.world_coordinates_to_map_indices(agent.policy.goal_)
                     mask = self.map.get_agent_map_indices([pi, pj], agent.radius)
@@ -529,7 +529,7 @@ class CollisionAvoidanceEnv(gym.Env):
                     elif not in_map:
                         print("Subgoal Inside Wall!")
                         rewards[i] += -0.1
-                """
+
         rewards = np.clip(rewards, self.min_possible_reward,
                           self.max_possible_reward)/(self.max_possible_reward - self.min_possible_reward)
         if Config.TRAIN_SINGLE_AGENT:

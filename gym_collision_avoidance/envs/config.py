@@ -46,7 +46,7 @@ class Config:
     PERFORMANCE_TEST = False
     PLOT_PREDICTIONS = True
     EWC = False
-    MODEL_DESCRIPTION = " initial baseline after fix other agents observation with batch normalization"
+    MODEL_DESCRIPTION = " StaticMlpLstmPolicy after fix other agents observation with batch normalization penalize goal in obstacles COLL OFF"
 
     #MPC
     FORCES_N = 20
@@ -91,7 +91,7 @@ class Config:
     NUM_OF_SLICES = 16
     MAX_RANGE = 6
 
-    STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states']
+    STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states','local_grid']
     #STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states', 'local_grid'] #occupancy grid
     #STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states', 'laserscan'] #angular map
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states', 'use_ppo', 'laserscan']
