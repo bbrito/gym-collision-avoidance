@@ -376,10 +376,13 @@ class CollisionAvoidanceEnv(gym.Env):
 
         self.scenario_index, self.number_of_agents = self.get_new_scenario()
 
+        if self.episode_number == 80:
+            print("hello")
+
         print(self.scenario[self.scenario_index] + "(number_of_agents=" + str(self.number_of_agents))
         if self.evaluate:
             self.prev_scenario_index = self.scenario_index
-            self.scenario_index = np.random.randint(0, len(self.scenario))
+
             if Config.ANIMATE_EPISODES or Config.PERFORMANCE_TEST:
                 self.agents, self.obstacles = eval("tc." + self.scenario[self.scenario_index] + "(number_of_agents=" + str(self.number_of_agents) + ", ego_agent_policy=" + self.ego_policy+ ", other_agents_policy=" + self.other_agents_policy + ", seed="+str(self.episode_number) +
                                ", ego_agent_dynamics=" + self.ego_agent_dynamics +", other_agents_dynamics=" + self.other_agents_dynamics  +")")
@@ -643,6 +646,10 @@ class CollisionAvoidanceEnv(gym.Env):
         else:
             for i in agent_inds:
                 collision_with_wall[i] = False
+
+
+        if collision_with_wall[0] or collision_with_agent[0]:
+            print("ego-agent collided")
 
         return collision_with_agent, collision_with_wall, entered_norm_zone, dist_btwn_nearest_agent
 

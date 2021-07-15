@@ -2953,14 +2953,14 @@ def agent_with_corridor(number_of_agents=4, ego_agent_policy=RVOPolicy,other_age
         random.seed(seed)
         np.random.seed(seed)
 
-    n_agents = random.randint(2, np.maximum(number_of_agents, 2))
-    #n_agents = number_of_agents
+    #n_agents = random.randint(2, np.maximum(number_of_agents, 2))
+    n_agents = number_of_agents
 
     # Corridor scenario
     obstacle = []
     rotation_angle = np.random.uniform(-np.pi,np.pi)
-    obstacle_1 = [(10, 6), (-10, 6), (-10, 2.3), (10, 2.3)]
-    obstacle_2 = [(10, -2.3), (-10, -2.3), (-10, -6), (10, -6)]
+    obstacle_1 = [(10, 6), (-10, 6), (-10, 2.5), (10, 2.5)]
+    obstacle_2 = [(10, -2.5), (-10, -2.5), (-10, -6), (10, -6)]
 
     obstacle.extend([obstacle_1, obstacle_2])
 

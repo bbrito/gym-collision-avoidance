@@ -281,6 +281,13 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, ax2, last_index=-1):
                 circle_times = np.arange(0.0, t_final,
                                          circle_spacing)
                 if circle_times.size == 0:
+                    alpha = 1 - \
+                            agent.global_state_history[agent.step_num, 0] / \
+                            (max_time_alpha_scalar * max_time)
+                    c = rgba2rgb(plt_color + [float(alpha)])
+                    ax.add_patch(plt.Circle(agent.global_state_history[agent.step_num, 1:3],
+                                            radius=agent.radius, fc=c, ec=plt_color,
+                                            fill=True))
                     continue
                 _, circle_inds = find_nearest(agent.global_state_history[:agent.step_num - 1, 0],
                                               circle_times)

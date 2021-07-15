@@ -68,7 +68,11 @@ class OtherAgentsStatesSensor(Sensor):
 
             other_agents_states[other_agent_count,:] = other_obs
             other_agent_count += 1
-        
+
+        # Repeat most distant agent
+        for i in range(other_agent_count,Config.MAX_NUM_OTHER_AGENTS_OBSERVED):
+            other_agents_states[i, :] = other_agents_states[i-1, :]
+
         host_agent.num_other_agents_observed = other_agent_count
 
         return other_agents_states

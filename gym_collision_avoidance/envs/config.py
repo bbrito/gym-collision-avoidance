@@ -26,7 +26,7 @@ class Config:
     # COLLISION AVOIDANCE PARAMETER
     NUM_TEST_CASES = 50
     PLOT_EVERY_N_EPISODES = 500 # for tensorboard visualization
-    DT             = 0.1 # seconds between simulation time steps
+    DT             = 0.2 # seconds between simulation time steps
     REWARD_AT_GOAL = 3.0 # reward given when agent reaches goal position
     REWARD_COLLISION_WITH_AGENT = -10.0 # reward given when agent collides with another agent
     REWARD_TIMEOUT = -0.0 # reward given for not reaching the goal
@@ -46,12 +46,12 @@ class Config:
     PERFORMANCE_TEST = False
     PLOT_PREDICTIONS = True
     EWC = False
-    MODEL_DESCRIPTION = " StaticMlpLstmPolicy after fix other agents observation with batch normalization penalize goal in obstacles COLL OFF"
+    MODEL_DESCRIPTION = " original network dt=0.2 and k=2 COLL OFF"
 
     #MPC
     FORCES_N = 20
-    FORCES_DT = 0.1
-    REPEAT_STEPS = 1
+    FORCES_DT = 0.2
+    REPEAT_STEPS = 2
 
     LASERSCAN_LENGTH = 16 # num range readings in one scan
     NUM_STEPS_IN_OBS_HISTORY = 1 # number of time steps to store in observation vector
@@ -60,8 +60,8 @@ class Config:
     NEAR_GOAL_THRESHOLD = 1.5
     MAX_TIME_RATIO = 3.0 # agent has this number times the straight-line-time to reach its goal before "timing out"
 
-    SENSING_HORIZON  = np.inf
-    #SENSING_HORIZON  = 5.0
+    #SENSING_HORIZON  = np.inf
+    SENSING_HORIZON  = 5.0
 
     RVO_TIME_HORIZON = 1.0
     RVO_COLLAB_COEFF = 0.5
@@ -91,7 +91,8 @@ class Config:
     NUM_OF_SLICES = 16
     MAX_RANGE = 6
 
-    STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states','local_grid']
+    STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states']
+    #STATES_IN_OBS = ['vel','dist_to_goal', 'rel_goal', 'heading_ego_frame', 'other_agents_states','local_grid']
     #STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states', 'local_grid'] #occupancy grid
     #STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states', 'laserscan'] #angular map
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states', 'use_ppo', 'laserscan']
@@ -115,6 +116,14 @@ class Config:
             'std': np.array([1.0], dtype=np.float32),
             'mean': np.array([0.5], dtype=np.float32)
             },
+        'vel': {
+            'dtype': np.float32,
+            'size': 2,
+            'bounds': [-1, 1],
+            'attr': 'get_agent_data("vel_global_frame")',
+            'std': np.array([1.0], dtype=np.float32),
+            'mean': np.array([0.], dtype=np.float32)
+        },
         'rel_goal': {
             'dtype': np.float32,
             'size': 2,
